@@ -65,7 +65,7 @@ export function exportToCSV(data: ExportData, filename = 'worldmonitor-export'):
   const clean = sanitizeData(data);
   const lines: string[] = [];
 
-  lines.push(`# WorldMonitor Export — ${new Date(clean.timestamp).toISOString()}`);
+  lines.push(`# SFC-Monitor Export — ${new Date(clean.timestamp).toISOString()}`);
   lines.push('# Note: CSV is a structured summary. Use JSON export for full fidelity.');
   if (clean.meta?.note) lines.push(`# ${clean.meta.note}`);
   lines.push('');

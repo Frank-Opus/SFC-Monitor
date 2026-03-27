@@ -45,7 +45,7 @@ async function sendNotificationEmail(name, email, organization, phone, message, 
         'Authorization': `Bearer ${resendKey}`,
       },
       body: JSON.stringify({
-        from: 'World Monitor <noreply@worldmonitor.app>',
+        from: 'SFC-Monitor <noreply@worldmonitor.app>',
         to: [notifyEmail],
         subject: `[WM Enterprise] ${sanitizeForSubject(name)} from ${sanitizeForSubject(organization)}`,
         html: `

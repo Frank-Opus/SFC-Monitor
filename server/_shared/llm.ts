@@ -80,7 +80,7 @@ export function getProviderCredentials(
 
     if (!process.env.OPENROUTER_API_BASE_URL) {
       headers['HTTP-Referer'] = 'https://worldmonitor.app';
-      headers['X-Title'] = 'World Monitor';
+      headers['X-Title'] = 'SFC-Monitor';
     }
 
     return {

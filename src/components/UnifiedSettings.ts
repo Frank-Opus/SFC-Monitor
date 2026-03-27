@@ -108,7 +108,7 @@ export class UnifiedSettings {
       const panelItem = target.closest<HTMLElement>('.panel-toggle-item');
       if (panelItem?.dataset.panel) {
         if (panelItem.dataset.proLocked) {
-          window.open('/pro', '_blank');
+          window.open('/', '_blank');
           return;
         }
         this.toggleDraftPanel(panelItem.dataset.panel);
