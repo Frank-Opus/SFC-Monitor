@@ -71,15 +71,22 @@ export function getProviderCredentials(
   if (provider === 'openrouter') {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return null;
+
+    const apiBaseUrl = process.env.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1';
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    if (!process.env.OPENROUTER_API_BASE_URL) {
+      headers['HTTP-Referer'] = 'https://worldmonitor.app';
+      headers['X-Title'] = 'World Monitor';
+    }
+
     return {
-      apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
-      model: overrides.model || 'google/gemini-2.5-flash',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://worldmonitor.app',
-        'X-Title': 'World Monitor',
-      },
+      apiUrl: new URL('/chat/completions', apiBaseUrl).toString(),
+      model: overrides.model || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash',
+      headers,
     };
   }
 

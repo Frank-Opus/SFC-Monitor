@@ -737,14 +737,17 @@ async function validateSecretAgainstProvider(key, rawValue, context = {}) {
     }
 
     case 'OPENROUTER_API_KEY': {
-      const response = await fetchWithTimeout('https://openrouter.ai/api/v1/models', {
+      const openRouterProbeBase = process.env.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1';
+      const openRouterProbeUrl = new URL('/models', openRouterProbeBase).toString();
+      const providerLabel = process.env.OPENROUTER_API_BASE_URL ? 'OpenAI-compatible provider' : 'OpenRouter';
+      const response = await fetchWithTimeout(openRouterProbeUrl, {
         headers: { Authorization: `Bearer ${value}`, 'User-Agent': CHROME_UA },
       });
       const text = await response.text();
-      if (isCloudflareChallenge403(response, text)) return ok('OpenRouter key stored (Cloudflare blocked verification)');
-      if (isAuthFailure(response.status, text)) return fail('OpenRouter rejected this key');
-      if (!response.ok) return fail(`OpenRouter probe failed (${response.status})`);
-      return ok('OpenRouter key verified');
+      if (isCloudflareChallenge403(response, text)) return ok(`${providerLabel} key stored (Cloudflare blocked verification)`);
+      if (isAuthFailure(response.status, text)) return fail(`${providerLabel} rejected this key`);
+      if (!response.ok) return fail(`${providerLabel} probe failed (${response.status})`);
+      return ok(`${providerLabel} key verified`);
     }
 
     case 'FRED_API_KEY': {
