@@ -392,19 +392,32 @@ canvas,
   opacity: 1;
 }
 
-.logo {
-  font-weight: bold;
-  font-size: 14px;
-  letter-spacing: 2px;
-  color: var(--accent);
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brand-wordmark {
+  width: auto;
+  height: 28px;
+  object-fit: contain;
 }
 
 .logo-mobile {
   display: none;
-  font-weight: bold;
-  font-size: 14px;
-  letter-spacing: 2px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1px;
   color: var(--accent);
+  white-space: nowrap;
 }
 
 .version {
@@ -1141,11 +1154,29 @@ canvas,
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.site-footer-minimal {
+  justify-content: center;
+}
+
+.site-footer-brand-minimal {
+  justify-content: center;
+  gap: 12px;
 }
 .site-footer-icon {
   width: 28px;
   height: 28px;
   border-radius: 50%;
+}
+.site-footer-icon-mark {
+  border-radius: 8px;
+}
+.site-footer-wordmark {
+  width: auto;
+  height: 28px;
+  object-fit: contain;
 }
 .site-footer-brand-text {
   display: flex;
@@ -1157,6 +1188,11 @@ canvas,
   font-weight: 600;
   color: var(--text);
   letter-spacing: 1px;
+}
+.site-footer-name-minimal {
+  font-size: 13px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
 }
 .site-footer-sub {
   font-family: var(--font-mono, monospace);
@@ -11630,10 +11666,23 @@ a.prediction-link:hover {
   padding: 16px 20px;
 }
 
+.mobile-menu-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-menu-brand-mark {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
 .mobile-menu-title {
-  font-weight: bold;
+  font-weight: 700;
   font-size: 14px;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   color: var(--accent);
 }
 
@@ -12120,8 +12169,7 @@ a.prediction-link:hover {
     display: none !important;
   }
 
-  /* Mobile: show "World Monitor" instead of "MONITOR" */
-  .logo {
+  .brand-wordmark {
     display: none;
   }
 

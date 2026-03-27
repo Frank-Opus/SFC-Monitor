@@ -12,12 +12,15 @@ find_node_bin() {
   fi
 
   local candidates=(
-    "$HOME/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/node"
+    "$HOME/.nvm/versions/node/v22.17.0/bin/node"
     "$HOME/.windsurf-server/bin/745a6c1ac471cc11f782a05d2c3ceacbc1de308f/node"
+    "$HOME/.vscode-server/cli/servers/Stable-ce099c1ed25d9eb3076c11e4a280f3eb52b4fbeb/server/node"
+    "$HOME/.vscode-server/bin/848b80aeb52026648a8ff9f7c45a9b0a80641e2e/node"
     "$HOME/.cursor-server/bin/63fcac100bd5d5749f2a98aa47d65f6eca61db30/node"
     "$HOME/.cursor-server/bin/60d42bed27e5775c43ec0428d8c653c49e58e260/node"
     "$HOME/.cursor-server/bin/07aa3b4519da4feab4761c58da3eeedd253a1670/node"
     "$HOME/.cursor-server/bin/2e353c5f5b30150ff7b874dee5a87660693d9de0/node"
+    "$HOME/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/node"
   )
 
   local candidate
