@@ -51,7 +51,7 @@ async function sendConfirmationEmail(email, referralCode) {
                   </td>
                   <td style="padding-left: 12px;">
                     <div style="font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -0.5px;">SFC-MONITOR</div>
-                    <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 2px;">by Someone.ceo</div>
+                    <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 2px;">SFC</div>
                   </td>
                 </tr>
               </table>
