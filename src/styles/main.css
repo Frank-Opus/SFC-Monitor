@@ -12039,12 +12039,16 @@ a.prediction-link:hover {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Leave room below the map on mobile so the page can still scroll naturally. */
+  /* On mobile, only shrink the map viewport itself; keep the top bar/header behavior unchanged. */
   .map-section {
-    height: min(68vh, 560px) !important;
-    height: min(68dvh, 560px) !important;
-    min-height: 320px !important;
-    max-height: 72dvh !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .map-section .map-container {
+    height: min(62vh, 500px) !important;
+    min-height: 280px !important;
+    max-height: 66dvh !important;
   }
 
   /* Collapsed map on mobile — higher specificity overrides .map-section above */
