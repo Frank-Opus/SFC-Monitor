@@ -424,46 +424,10 @@ export class PanelLayoutManager implements AppModule {
 
   private setupMobileMapToggle(): void {
     const mapSection = document.getElementById('mapSection');
-    const headerLeft = mapSection?.querySelector('.panel-header-left');
-    if (!mapSection || !headerLeft) return;
+    if (!mapSection) return;
 
     const stored = localStorage.getItem('mobile-map-collapsed');
-    const collapsed = stored === 'true';
-    if (collapsed) mapSection.classList.add('collapsed');
-
-    const scrollMode = localStorage.getItem('mobile-map-scroll-mode') === 'true';
-    if (scrollMode) mapSection.classList.add('scroll-pass-through');
-
-    const updateBtn = (btn: HTMLButtonElement, isCollapsed: boolean) => {
-      btn.textContent = isCollapsed ? `▶ ${t('components.map.showMap')}` : `▼ ${t('components.map.hideMap')}`;
-    };
-    const updateScrollBtn = (btn: HTMLButtonElement, enabled: boolean) => {
-      btn.textContent = enabled ? '✋ Drag Map' : '↕ Scroll Page';
-      btn.classList.toggle('active', enabled);
-    };
-
-    const btn = document.createElement('button');
-    btn.className = 'map-collapse-btn';
-    updateBtn(btn, collapsed);
-    headerLeft.after(btn);
-
-    const scrollBtn = document.createElement('button');
-    scrollBtn.className = 'map-scroll-btn';
-    updateScrollBtn(scrollBtn, scrollMode);
-    btn.after(scrollBtn);
-
-    btn.addEventListener('click', () => {
-      const isCollapsed = mapSection.classList.toggle('collapsed');
-      updateBtn(btn, isCollapsed);
-      localStorage.setItem('mobile-map-collapsed', String(isCollapsed));
-      if (!isCollapsed) window.dispatchEvent(new Event('resize'));
-    });
-
-    scrollBtn.addEventListener('click', () => {
-      const enabled = mapSection.classList.toggle('scroll-pass-through');
-      updateScrollBtn(scrollBtn, enabled);
-      localStorage.setItem('mobile-map-scroll-mode', String(enabled));
-    });
+    if (stored === 'true') mapSection.classList.add('collapsed');
   }
 
   renderCriticalBanner(postures: TheaterPostureSummary[]): void {

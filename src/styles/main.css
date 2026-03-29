@@ -12062,54 +12062,34 @@ a.prediction-link:hover {
     display: none;
   }
 
-  /* Map collapse toggle button — mobile only */
-  .map-collapse-btn,
-  .map-scroll-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-size: 12px;
-    cursor: pointer;
-    white-space: nowrap;
+  /* Mobile map grab handle: drag it to shrink/expand the map without extra buttons */
+  .map-resize-handle {
+    display: flex !important;
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    height: 20px;
+    margin: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.02), var(--border-subtle));
+    cursor: ns-resize;
+    touch-action: none;
   }
 
-  .map-collapse-btn {
-    margin-left: auto;
+  .map-resize-handle::after {
+    width: 52px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--text-dim);
+    opacity: 0.7;
   }
 
-  .map-collapse-btn:active,
-  .map-scroll-btn:active,
-  .map-scroll-btn.active {
-    background: var(--bg-tertiary, var(--border));
+  .map-section.collapsed .map-resize-handle {
+    border-top: 1px solid var(--border);
   }
 
-  .main-content .map-section.scroll-pass-through .map-container,
-  .main-content .map-section.scroll-pass-through .map-controls,
-  .main-content .map-section.scroll-pass-through .time-slider,
-  .main-content .map-section.scroll-pass-through .deckgl-controls,
-  .main-content .map-section.scroll-pass-through .deckgl-time-slider,
-  .main-content .map-section.scroll-pass-through .deckgl-layer-toggles,
-  .main-content .map-section.scroll-pass-through .deckgl-legend,
-  .main-content .map-section.scroll-pass-through .deckgl-timestamp {
-    pointer-events: none !important;
-  }
-
-  .main-content .map-section.scroll-pass-through .map-container,
-  .main-content .map-section.scroll-pass-through .deckgl-map-wrapper,
-  .main-content .map-section.scroll-pass-through #deckgl-basemap,
-  .main-content .map-section.scroll-pass-through #deckgl-overlay,
-  .main-content .map-section.scroll-pass-through #deckgl-overlay canvas {
-    touch-action: pan-y !important;
-  }
-
-  /* Hide pin button and resize handles on mobile */
+  /* Hide pin button and panel resize handles on mobile */
   .map-pin-btn,
-  .map-resize-handle,
   .panel-resize-handle {
     display: none !important;
   }

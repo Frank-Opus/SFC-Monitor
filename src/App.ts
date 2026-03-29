@@ -534,6 +534,17 @@ export class App {
       localStorage.setItem(FINANCE_MOBILE_LAYER_DEFAULTS_KEY, 'done');
     }
 
+    const FULL_MARITIME_LAYER_DEFAULTS_KEY = 'worldmonitor-full-maritime-layers-v1';
+    if (currentVariant === 'full' && !localStorage.getItem(FULL_MARITIME_LAYER_DEFAULTS_KEY)) {
+      mapLayers = {
+        ...mapLayers,
+        waterways: true,
+        tradeRoutes: true,
+      };
+      saveToStorage(STORAGE_KEYS.mapLayers, mapLayers);
+      localStorage.setItem(FULL_MARITIME_LAYER_DEFAULTS_KEY, 'done');
+    }
+
     // One-time migration: prune removed panel keys from stored settings and order
     const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v1';
     if (!localStorage.getItem(PANEL_PRUNE_KEY)) {

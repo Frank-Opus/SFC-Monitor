@@ -1382,6 +1382,59 @@ export class EventHandlerManager implements AppModule {
       if (document.hidden) endResize();
     };
     document.addEventListener('visibilitychange', this.boundMapResizeVisChangeHandler);
+
+    let touchStartY = 0;
+    let touchStartHeight = 0;
+    let touchResizing = false;
+
+    resizeHandle.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      touchResizing = true;
+      touchStartY = touch.clientY;
+      const target = getTarget();
+      touchStartHeight = target.offsetHeight;
+      this.ctx.map?.setIsResizing(true);
+      mapSection.classList.add('resizing');
+    }, { passive: true });
+
+    resizeHandle.addEventListener('touchmove', (e) => {
+      if (!touchResizing) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const isWide = window.innerWidth >= 1600;
+      const target = isWide ? mapContainer : mapSection;
+      const deltaY = touch.clientY - touchStartY;
+      const newHeight = Math.max(getMinHeight(), Math.min(touchStartHeight + deltaY, getMaxHeight()));
+      if (isWide) target.style.flex = 'none';
+      target.style.height = `${newHeight}px`;
+      this.ctx.map?.resize();
+      e.preventDefault();
+    }, { passive: false });
+
+    resizeHandle.addEventListener('touchend', () => {
+      if (!touchResizing) return;
+      touchResizing = false;
+      const target = getTarget();
+      const currentHeight = target.offsetHeight;
+      const collapseThreshold = Math.max(180, window.innerHeight * 0.28);
+      const expandThreshold = Math.max(320, window.innerHeight * 0.5);
+
+      if (window.innerWidth < 1600) {
+        if (currentHeight <= collapseThreshold) {
+          mapSection.classList.add('collapsed');
+          localStorage.setItem('mobile-map-collapsed', 'true');
+        } else {
+          mapSection.classList.remove('collapsed');
+          localStorage.setItem('mobile-map-collapsed', 'false');
+          if (currentHeight < expandThreshold) {
+            mapSection.style.height = `${expandThreshold}px`;
+          }
+        }
+      }
+
+      endResize();
+    }, { passive: true });
   }
 
   setupMapPin(): void {
