@@ -6,14 +6,32 @@ const buildVariant = (() => {
   }
 })();
 
+const VALID_VARIANTS = new Set(['full', 'tech', 'finance', 'happy', 'commodity']);
+
+function getStoredVariant(): string | null {
+  try {
+    const stored = localStorage.getItem('worldmonitor-variant');
+    return stored && VALID_VARIANTS.has(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function getUrlVariant(): string | null {
+  try {
+    const value = new URL(window.location.href).searchParams.get('variant');
+    return value && VALID_VARIANTS.has(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 export const SITE_VARIANT: string = (() => {
   if (typeof window === 'undefined') return buildVariant;
 
   const isTauri = '__TAURI_INTERNALS__' in window || '__TAURI__' in window;
   if (isTauri) {
-    const stored = localStorage.getItem('worldmonitor-variant');
-    if (stored === 'tech' || stored === 'full' || stored === 'finance' || stored === 'happy' || stored === 'commodity') return stored;
-    return buildVariant;
+    return getStoredVariant() || buildVariant;
   }
 
   const h = location.hostname;
@@ -23,10 +41,9 @@ export const SITE_VARIANT: string = (() => {
   if (h.startsWith('commodity.')) return 'commodity';
 
   if (h === 'localhost' || h === '127.0.0.1') {
-    const stored = localStorage.getItem('worldmonitor-variant');
-    if (stored === 'tech' || stored === 'full' || stored === 'finance' || stored === 'happy' || stored === 'commodity') return stored;
-    return buildVariant;
+    return getUrlVariant() || getStoredVariant() || buildVariant;
   }
 
-  return 'full';
+  // Custom domains and preview deployments can host every variant on one origin.
+  return getUrlVariant() || getStoredVariant() || 'full';
 })();

@@ -210,8 +210,26 @@ export class PanelLayoutManager implements AppModule {
           <div class="variant-switcher">${(() => {
         const local = this.ctx.isDesktopApp || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const inIframe = window.self !== window.top;
-        const vHref = (v: string, prod: string) => local || SITE_VARIANT === v ? '#' : prod;
-        const vTarget = (v: string) => !local && SITE_VARIANT !== v && inIframe ? 'target="_blank" rel="noopener"' : '';
+        const isLegacyVariantHost = /^(worldmonitor\.app|(?:tech|finance|happy|commodity)\.worldmonitor\.app)$/i.test(location.hostname);
+        const variantUrl = (v: string) => {
+          if (SITE_VARIANT === v) return '#';
+          if (!isLegacyVariantHost) {
+            const url = new URL(window.location.href);
+            if (v === 'full') url.searchParams.delete('variant');
+            else url.searchParams.set('variant', v);
+            return url.toString();
+          }
+          const prodMap: Record<string, string> = {
+            full: 'https://worldmonitor.app',
+            tech: 'https://tech.worldmonitor.app',
+            finance: 'https://finance.worldmonitor.app',
+            commodity: 'https://commodity.worldmonitor.app',
+            happy: 'https://happy.worldmonitor.app',
+          };
+          return prodMap[v] || '#';
+        };
+        const vHref = (v: string, _prod: string) => local ? '#' : variantUrl(v);
+        const vTarget = (v: string) => !local && SITE_VARIANT !== v && inIframe && isLegacyVariantHost ? 'target="_blank" rel="noopener"' : '';
         return `
             <a href="${vHref('full', 'https://worldmonitor.app')}"
                class="variant-option ${SITE_VARIANT === 'full' ? 'active' : ''}"

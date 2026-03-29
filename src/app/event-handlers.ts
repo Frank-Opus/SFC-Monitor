@@ -881,9 +881,14 @@ export class EventHandlerManager implements AppModule {
     trackVariantSwitch(SITE_VARIANT, variant);
     await this.exitFullscreenForNavigation();
 
-    if (this.ctx.isDesktopApp || options.isLocalDev) {
+    const isLegacyVariantHost = /^(worldmonitor\.app|(?:tech|finance|happy|commodity)\.worldmonitor\.app)$/i.test(window.location.hostname);
+
+    if (this.ctx.isDesktopApp || options.isLocalDev || !isLegacyVariantHost) {
       localStorage.setItem('worldmonitor-variant', variant);
-      window.location.reload();
+      const url = new URL(window.location.href);
+      if (variant === 'full') url.searchParams.delete('variant');
+      else url.searchParams.set('variant', variant);
+      window.location.href = url.toString();
       return;
     }
 
