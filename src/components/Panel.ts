@@ -1,11 +1,11 @@
-import { isDesktopRuntime } from '../services/runtime';
-import { invokeTauri } from '../services/tauri-bridge';
 import { t } from '../services/i18n';
 import { h, replaceChildren, safeHtml } from '../utils/dom-utils';
 import { trackPanelResized } from '@/services/analytics';
 import { getAiFlowSettings } from '@/services/ai-flow-settings';
 import { getSecretState } from '@/services/runtime-config';
 import { PanelGateReason } from '@/services/panel-gating';
+import { isDesktopRuntime } from '../services/runtime';
+import { invokeTauri } from '../services/tauri-bridge';
 
 export interface PanelOptions {
   id: string;
@@ -20,8 +20,6 @@ export interface PanelOptions {
 }
 
 const lockSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
-
-const upgradeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
 
 const PANEL_SPANS_KEY = 'worldmonitor-panel-spans';
 
@@ -779,18 +777,10 @@ export class Panel {
       lockedChildren.push(featureList);
     }
 
-    const ctaBtn = h('button', { type: 'button', className: 'panel-locked-cta' }, t('premium.joinWaitlist'));
-    if (isDesktopRuntime()) {
-      ctaBtn.addEventListener('click', () => void invokeTauri<void>('open_url', { url: 'https://worldmonitor.app/pro' }).catch(() => window.open('https://worldmonitor.app/pro', '_blank')));
-    } else {
-      ctaBtn.addEventListener('click', () => window.open('https://worldmonitor.app/pro', '_blank'));
-    }
-    lockedChildren.push(ctaBtn);
-
     replaceChildren(this.content, h('div', { className: 'panel-locked-state' }, ...lockedChildren));
   }
 
-  public showGatedCta(reason: PanelGateReason, onAction: () => void): void {
+  public showGatedCta(reason: PanelGateReason, _onAction: () => void): void {
     this._locked = true;
     this.clearRetryCountdown();
 
@@ -800,16 +790,14 @@ export class Panel {
     }
     this.element.classList.add('panel-is-locked');
 
-    const config: Record<string, { icon: string; desc: string; cta: string }> = {
+    const config: Record<string, { icon: string; desc: string }> = {
       [PanelGateReason.ANONYMOUS]: {
         icon: lockSvg,
-        desc: t('premium.signInToUnlock'),
-        cta: t('premium.signIn'),
+        desc: t('premium.lockedDesc'),
       },
       [PanelGateReason.FREE_TIER]: {
-        icon: upgradeSvg,
-        desc: t('premium.upgradeDesc'),
-        cta: t('premium.upgradeToPro'),
+        icon: lockSvg,
+        desc: t('premium.lockedDesc'),
       },
     };
 
@@ -821,10 +809,7 @@ export class Panel {
 
     const descEl = h('div', { className: 'panel-locked-desc' }, entry.desc);
 
-    const ctaBtn = h('button', { type: 'button', className: 'panel-locked-cta' }, entry.cta);
-    ctaBtn.addEventListener('click', onAction);
-
-    replaceChildren(this.content, h('div', { className: 'panel-locked-state' }, iconEl, descEl, ctaBtn));
+    replaceChildren(this.content, h('div', { className: 'panel-locked-state' }, iconEl, descEl));
   }
 
   public unlockPanel(): void {

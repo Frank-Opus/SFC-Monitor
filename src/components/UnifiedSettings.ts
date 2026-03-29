@@ -404,7 +404,7 @@ export class UnifiedSettings {
     if (!panel.enabled && !isProUser()) {
       const enabledCount = Object.entries(this.draftPanelSettings).filter(([k, p]) => p.enabled && !k.startsWith('cw-')).length;
       if (enabledCount >= FREE_MAX_PANELS) {
-        showToast(t('modals.settingsWindow.freePanelLimit', { max: String(FREE_MAX_PANELS) }));
+        showToast(`Panel limit reached (${FREE_MAX_PANELS}).`);
         return;
       }
     }

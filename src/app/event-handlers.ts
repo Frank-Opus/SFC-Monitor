@@ -1027,7 +1027,7 @@ export class EventHandlerManager implements AppModule {
           const allSources = this.getAllSourceNames();
           const currentlyEnabled = allSources.filter(n => !this.ctx.disabledSources.has(n)).length;
           if (currentlyEnabled + 1 > FREE_MAX_SOURCES) {
-            this.showToast(t('modals.settingsWindow.freeSourceLimit', { max: String(FREE_MAX_SOURCES) }));
+            this.showToast(`Source limit reached (${FREE_MAX_SOURCES}).`);
             return;
           }
         }
@@ -1044,7 +1044,7 @@ export class EventHandlerManager implements AppModule {
           const currentlyEnabled = allSources.filter(n => !this.ctx.disabledSources.has(n)).length;
           const wouldEnable = names.filter(n => this.ctx.disabledSources.has(n) && allSources.includes(n)).length;
           if (currentlyEnabled + wouldEnable > FREE_MAX_SOURCES) {
-            this.showToast(t('modals.settingsWindow.freeSourceLimit', { max: String(FREE_MAX_SOURCES) }));
+            this.showToast(`Source limit reached (${FREE_MAX_SOURCES}).`);
             return;
           }
         }
