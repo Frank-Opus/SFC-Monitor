@@ -520,6 +520,20 @@ export class App {
       }
     }
 
+    // One-time mobile finance migration: enable key maritime/economic layers after the mobile defaults changed.
+    const FINANCE_MOBILE_LAYER_DEFAULTS_KEY = 'worldmonitor-finance-mobile-layers-v2';
+    if (currentVariant === 'finance' && isMobile && !localStorage.getItem(FINANCE_MOBILE_LAYER_DEFAULTS_KEY)) {
+      mapLayers = {
+        ...mapLayers,
+        cables: true,
+        pipelines: true,
+        waterways: true,
+        tradeRoutes: true,
+      };
+      saveToStorage(STORAGE_KEYS.mapLayers, mapLayers);
+      localStorage.setItem(FINANCE_MOBILE_LAYER_DEFAULTS_KEY, 'done');
+    }
+
     // One-time migration: prune removed panel keys from stored settings and order
     const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v1';
     if (!localStorage.getItem(PANEL_PRUNE_KEY)) {

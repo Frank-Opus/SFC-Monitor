@@ -245,7 +245,7 @@ export const MOBILE_DEFAULT_MAP_LAYERS: MapLayers = {
   conflicts: false,
   bases: false,
   cables: true,
-  pipelines: false,
+  pipelines: true,
   hotspots: false,
   ais: false,
   nuclear: false,

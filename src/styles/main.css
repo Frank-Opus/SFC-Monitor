@@ -12063,11 +12063,11 @@ a.prediction-link:hover {
   }
 
   /* Map collapse toggle button — mobile only */
-  .map-collapse-btn {
+  .map-collapse-btn,
+  .map-scroll-btn {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    margin-left: auto;
     padding: 4px 10px;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -12078,8 +12078,33 @@ a.prediction-link:hover {
     white-space: nowrap;
   }
 
-  .map-collapse-btn:active {
+  .map-collapse-btn {
+    margin-left: auto;
+  }
+
+  .map-collapse-btn:active,
+  .map-scroll-btn:active,
+  .map-scroll-btn.active {
     background: var(--bg-tertiary, var(--border));
+  }
+
+  .main-content .map-section.scroll-pass-through .map-container,
+  .main-content .map-section.scroll-pass-through .map-controls,
+  .main-content .map-section.scroll-pass-through .time-slider,
+  .main-content .map-section.scroll-pass-through .deckgl-controls,
+  .main-content .map-section.scroll-pass-through .deckgl-time-slider,
+  .main-content .map-section.scroll-pass-through .deckgl-layer-toggles,
+  .main-content .map-section.scroll-pass-through .deckgl-legend,
+  .main-content .map-section.scroll-pass-through .deckgl-timestamp {
+    pointer-events: none !important;
+  }
+
+  .main-content .map-section.scroll-pass-through .map-container,
+  .main-content .map-section.scroll-pass-through .deckgl-map-wrapper,
+  .main-content .map-section.scroll-pass-through #deckgl-basemap,
+  .main-content .map-section.scroll-pass-through #deckgl-overlay,
+  .main-content .map-section.scroll-pass-through #deckgl-overlay canvas {
+    touch-action: pan-y !important;
   }
 
   /* Hide pin button and resize handles on mobile */
