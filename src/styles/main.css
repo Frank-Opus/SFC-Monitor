@@ -12039,12 +12039,12 @@ a.prediction-link:hover {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Full-viewport map on mobile (Google Maps-like experience) */
+  /* Leave room below the map on mobile so the page can still scroll naturally. */
   .map-section {
-    height: calc(100vh - 48px) !important;
-    height: calc(100dvh - 48px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
-    min-height: 60vh !important;
-    max-height: 100dvh !important;
+    height: min(68vh, 560px) !important;
+    height: min(68dvh, 560px) !important;
+    min-height: 320px !important;
+    max-height: 72dvh !important;
   }
 
   /* Collapsed map on mobile — higher specificity overrides .map-section above */
