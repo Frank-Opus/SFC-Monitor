@@ -11913,10 +11913,16 @@ a.prediction-link:hover {
   .header {
     gap: 8px;
     padding: 8px 12px;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1300;
     background: var(--surface);
+  }
+
+  .main-content {
+    padding-top: 56px;
   }
 
   .header-left {
@@ -12253,6 +12259,10 @@ a.prediction-link:hover {
 
   .header {
     padding: 8px;
+  }
+
+  .main-content {
+    padding-top: 52px;
   }
 }
 
