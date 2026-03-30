@@ -17,8 +17,17 @@ function isAllowedOrigin(origin) {
   return Boolean(origin) && ALLOWED_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
 }
 
+function extractOriginFromReferer(referer) {
+  if (!referer) return '';
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return '';
+  }
+}
+
 export function getCorsHeaders(req, methods = 'GET, OPTIONS') {
-  const origin = req.headers.get('origin') || '';
+  const origin = req.headers.get('origin') || extractOriginFromReferer(req.headers.get('referer')) || '';
   const allowOrigin = isAllowedOrigin(origin) ? origin : 'https://worldmonitor.app';
   return {
     'Access-Control-Allow-Origin': allowOrigin,
@@ -47,7 +56,7 @@ export function getPublicCorsHeaders(methods = 'GET, OPTIONS') {
 }
 
 export function isDisallowedOrigin(req) {
-  const origin = req.headers.get('origin');
+  const origin = req.headers.get('origin') || extractOriginFromReferer(req.headers.get('referer')) || '';
   if (!origin) return false;
   return !isAllowedOrigin(origin);
 }

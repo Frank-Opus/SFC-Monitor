@@ -29,8 +29,17 @@ function isAllowedOrigin(origin: string): boolean {
   return Boolean(origin) && ALLOWED_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
 }
 
+function extractOriginFromReferer(referer: string | null): string {
+  if (!referer) return '';
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return '';
+  }
+}
+
 export function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('origin') || '';
+  const origin = req.headers.get('origin') || extractOriginFromReferer(req.headers.get('referer')) || '';
   const allowOrigin = isAllowedOrigin(origin) ? origin : 'https://worldmonitor.app';
   return {
     'Access-Control-Allow-Origin': allowOrigin,
@@ -42,7 +51,7 @@ export function getCorsHeaders(req: Request): Record<string, string> {
 }
 
 export function isDisallowedOrigin(req: Request): boolean {
-  const origin = req.headers.get('origin');
+  const origin = req.headers.get('origin') || extractOriginFromReferer(req.headers.get('referer')) || '';
   if (!origin) return false;
   return !isAllowedOrigin(origin);
 }
