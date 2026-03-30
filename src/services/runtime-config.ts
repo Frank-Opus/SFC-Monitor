@@ -2,7 +2,6 @@ import { getApiBaseUrl, isDesktopRuntime } from './runtime';
 import { invokeTauri } from './tauri-bridge';
 
 export type RuntimeSecretKey =
-  | 'GROQ_API_KEY'
   | 'OPENROUTER_API_KEY'
   | 'EXA_API_KEYS'
   | 'BRAVE_API_KEYS'
@@ -11,6 +10,8 @@ export type RuntimeSecretKey =
   | 'EIA_API_KEY'
   | 'CLOUDFLARE_API_TOKEN'
   | 'ACLED_ACCESS_TOKEN'
+  | 'ACLED_EMAIL'
+  | 'ACLED_PASSWORD'
   | 'URLHAUS_AUTH_KEY'
   | 'OTX_API_KEY'
   | 'ABUSEIPDB_API_KEY'
@@ -31,7 +32,6 @@ export type RuntimeSecretKey =
   | 'ICAO_API_KEY';
 
 export type RuntimeFeatureId =
-  | 'aiGroq'
   | 'aiOpenRouter'
   | 'stockNewsSearchExa'
   | 'stockNewsSearchBrave'
@@ -88,7 +88,6 @@ function getSidecarSecretValidateUrl(): string {
 }
 
 const defaultToggles: Record<RuntimeFeatureId, boolean> = {
-  aiGroq: true,
   aiOpenRouter: true,
   stockNewsSearchExa: true,
   stockNewsSearchBrave: true,
@@ -121,13 +120,6 @@ export const RUNTIME_FEATURES: RuntimeFeatureDefinition[] = [
     name: 'Ollama local summarization',
     description: 'Local LLM provider via OpenAI-compatible endpoint (Ollama or LM Studio, desktop-first).',
     requiredSecrets: ['OLLAMA_API_URL', 'OLLAMA_MODEL'],
-    fallback: 'Falls back to Groq, then OpenRouter, then local browser model.',
-  },
-  {
-    id: 'aiGroq',
-    name: 'Groq summarization',
-    description: 'Primary fast LLM provider used for AI summary generation.',
-    requiredSecrets: ['GROQ_API_KEY'],
     fallback: 'Falls back to OpenRouter, then local browser model.',
   },
   {
@@ -184,7 +176,8 @@ export const RUNTIME_FEATURES: RuntimeFeatureDefinition[] = [
     name: 'ACLED conflicts & protests',
     description: 'Conflict and protest event feeds from ACLED.',
     requiredSecrets: ['ACLED_ACCESS_TOKEN'],
-    fallback: 'Conflict/protest overlays are hidden.',
+    desktopRequiredSecrets: ['ACLED_EMAIL', 'ACLED_PASSWORD'],
+    fallback: 'Conflict/protest overlays are hidden unless ACLED token or account credentials are configured.',
   },
   {
     id: 'ucdpConflicts',

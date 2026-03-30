@@ -95,12 +95,8 @@ export function warmHealthCache(): void {
     ? (process.env?.OLLAMA_API_URL || process.env?.LLM_API_URL)
     : undefined;
   if (ollamaUrl) providerUrls.push(ollamaUrl);
-
-  if (typeof process !== 'undefined' && process.env?.GROQ_API_KEY) {
-    providerUrls.push('https://api.groq.com/openai/v1/chat/completions');
-  }
   if (typeof process !== 'undefined' && process.env?.OPENROUTER_API_KEY) {
-    providerUrls.push('https://openrouter.ai/api/v1/chat/completions');
+    providerUrls.push((process.env?.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1') + '/chat/completions');
   }
 
   for (const url of providerUrls) {

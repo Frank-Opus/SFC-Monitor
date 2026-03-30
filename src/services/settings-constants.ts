@@ -1,7 +1,6 @@
 import type { RuntimeSecretKey, RuntimeFeatureId } from './runtime-config';
 
 export const SIGNUP_URLS: Partial<Record<RuntimeSecretKey, string>> = {
-  GROQ_API_KEY: 'https://console.groq.com/keys',
   OPENROUTER_API_KEY: 'https://openrouter.ai/settings/keys',
   EXA_API_KEYS: 'https://dashboard.exa.ai/api-keys',
   BRAVE_API_KEYS: 'https://api-dashboard.search.brave.com/app/keys',
@@ -10,6 +9,8 @@ export const SIGNUP_URLS: Partial<Record<RuntimeSecretKey, string>> = {
   EIA_API_KEY: 'https://www.eia.gov/opendata/register.php',
   CLOUDFLARE_API_TOKEN: 'https://dash.cloudflare.com/profile/api-tokens',
   ACLED_ACCESS_TOKEN: 'https://developer.acleddata.com/',
+  ACLED_EMAIL: 'https://developer.acleddata.com/',
+  ACLED_PASSWORD: 'https://developer.acleddata.com/',
   URLHAUS_AUTH_KEY: 'https://auth.abuse.ch/',
   OTX_API_KEY: 'https://otx.alienvault.com/',
   ABUSEIPDB_API_KEY: 'https://www.abuseipdb.com/login',
@@ -37,7 +38,6 @@ export const PLAINTEXT_KEYS = new Set<RuntimeSecretKey>([
 export const MASKED_SENTINEL = '__WM_MASKED__';
 
 export const HUMAN_LABELS: Record<RuntimeSecretKey, string> = {
-  GROQ_API_KEY: 'Groq API Key',
   OPENROUTER_API_KEY: 'OpenRouter API Key',
   EXA_API_KEYS: 'Exa API Keys',
   BRAVE_API_KEYS: 'Brave Search API Keys',
@@ -46,6 +46,8 @@ export const HUMAN_LABELS: Record<RuntimeSecretKey, string> = {
   EIA_API_KEY: 'EIA API Key',
   CLOUDFLARE_API_TOKEN: 'Cloudflare API Token',
   ACLED_ACCESS_TOKEN: 'ACLED Access Token',
+  ACLED_EMAIL: 'ACLED Email',
+  ACLED_PASSWORD: 'ACLED Password',
   URLHAUS_AUTH_KEY: 'URLhaus Auth Key',
   OTX_API_KEY: 'AlienVault OTX Key',
   ABUSEIPDB_API_KEY: 'AbuseIPDB API Key',
@@ -76,7 +78,7 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   {
     id: 'ai',
     label: 'AI & Summarization',
-    features: ['aiOllama', 'aiGroq', 'aiOpenRouter'],
+    features: ['aiOllama', 'aiOpenRouter'],
   },
   {
     id: 'economy',
