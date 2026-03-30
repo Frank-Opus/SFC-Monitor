@@ -534,6 +534,15 @@ export class App {
       localStorage.setItem(FINANCE_MOBILE_LAYER_DEFAULTS_KEY, 'done');
     }
 
+    const FINANCE_PREMIUM_PANEL_MIGRATION_KEY = 'worldmonitor-finance-premium-panels-v1';
+    if (currentVariant === 'finance' && !isDesktopRuntime() && !localStorage.getItem(FINANCE_PREMIUM_PANEL_MIGRATION_KEY)) {
+      for (const key of ['stock-analysis', 'stock-backtest', 'daily-market-brief', 'market-implications']) {
+        if (panelSettings[key]) panelSettings[key] = { ...panelSettings[key], enabled: false };
+      }
+      saveToStorage(STORAGE_KEYS.panels, panelSettings);
+      localStorage.setItem(FINANCE_PREMIUM_PANEL_MIGRATION_KEY, 'done');
+    }
+
     const FULL_MARITIME_LAYER_DEFAULTS_KEY = 'worldmonitor-full-maritime-layers-v1';
     if (currentVariant === 'full' && !localStorage.getItem(FULL_MARITIME_LAYER_DEFAULTS_KEY)) {
       mapLayers = {

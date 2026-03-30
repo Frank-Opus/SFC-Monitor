@@ -1577,6 +1577,9 @@ export class PanelLayoutManager implements AppModule {
 
   private makeDraggable(el: HTMLElement, key: string): void {
     el.dataset.panel = key;
+    // Disable panel drag/drop on the web client for now; the floating drop zone
+    // overlay is confusing on mobile and interferes with normal scrolling.
+    return;
     let isDragging = false;
     let dragStarted = false;
     let startX = 0;
