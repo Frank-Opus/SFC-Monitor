@@ -2,53 +2,42 @@
 
 ## Goal
 
-User wants the entire project to be fully healthy on Vercel only, with no dependency assumptions on external infrastructure.
+User chose the pragmatic path: make the new Vercel cron work deploy on Hobby first, even if real-time health remains bad afterward.
 
 ## Current blocking truth
 
-The repo contains new Vercel cron warm/seed routes, but production has NOT deployed them yet because CI is still blocking release.
+Production has already deployed the Hobby-compatible cron changes. The blocking issue is now operational freshness, not CI or deployment.
 
 ## Production status at last check
 
 - Public entry checked: `https://sfc-monitor.vercel.app`
-- `/api/cron-warm` -> `404`
-- `/api/cron-seed-national-debt` -> `404`
-- `/api/health?compact=1` -> `503 UNHEALTHY`
-- Health snapshot: `106 total / 2 ok / 27 warn / 77 crit`
-- `/api/seed-health` -> `200 degraded`, many seeds still `missing`
+- Production commit: `fbd96b16` (`fix(deploy): downgrade vercel crons for hobby`)
+- Vercel production deployment: `dpl_3s354GtmU7t9WQhB78LkogVDGtbi`
+- GitHub commit status for `fbd96b16`: `success`
+- `/api/health?compact=1` -> `UNHEALTHY`
+- Health snapshot on `2026-04-01` check: `106 total / 5 ok / 25 warn / 76 crit`
+- `/api/cron-warm?group=fast` -> direct manual `curl` still returns `403`
+- `/api/cron-seed-national-debt` -> direct manual `curl` still returns `403`
+- `/api/seed-health` -> direct manual `curl` still returns `403`
 
-## Why production is stuck
+## What changed
 
-Latest Vercel production deployment still points at commit `84d1da4a` (`tune health thresholds and fix smart poll lint`).
-Newer commits with cron support have not reached production because GitHub checks are not fully green.
+- CI blockers were fixed locally and pushed.
+- Vercel Hobby rejected the old multi-run-per-day cron expressions.
+- `vercel.json` was downgraded to daily Hobby-safe schedules:
+  - `/api/cron-warm?group=fast` -> `5 0 * * *`
+  - `/api/cron-warm?group=hourly` -> `35 0 * * *`
+  - `/api/cron-seed-national-debt` -> `23 3 1 * *`
+- After that change, production deployment succeeded and the alias moved to `fbd96b16`.
 
-## Latest CI state seen
+## Why health is still bad
 
-For head `abaa9d7b`:
+Most health checks still expect 15 minute to 6 hour freshness windows. Daily Hobby cron cannot keep those datasets fresh, so the app remains operationally unhealthy even though deployment is fixed.
 
-- `Test`: success
-- `Typecheck`: failure
-- `Lint Code`: failure
-- `Deploy Gate`: success
+## Important validation caveat
 
-## Exact current CI blockers found
-
-### Typecheck
-
-From latest logs, still failing on `api/cron-seed-national-debt.ts`:
-
-- `TS2578`: unused `@ts-expect-error`
-- `TS7016`: no declaration file for `../scripts/seed-national-debt.mjs`
-
-### Lint
-
-From latest logs, still failing in `tests/mcp-proxy.test.mjs` on an unused `url` parameter that should be renamed to `_url`.
+Direct `curl` requests to several protected or internal API routes still return `403`, including non-existent `/api/*` paths. Treat those manual calls as unreliable route-level validation. Use deployed commit / alias status plus health snapshots and scheduled-run observations instead.
 
 ## Local working tree at handoff time
 
-Uncommitted local changes exist for:
-
-- `api/cron-seed-national-debt.ts`
-- `tests/mcp-proxy.test.mjs`
-
-These edits were made to fix the exact two blockers above and should be committed/pushed next.
+Working tree is clean at this point.

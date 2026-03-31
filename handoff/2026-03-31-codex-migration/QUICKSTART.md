@@ -10,32 +10,25 @@ Start here if you only have 30 seconds.
 
 ## Main problem
 
-Production is still on old commit `84d1da4a`, so the new Vercel cron routes are not live yet.
-Because of that:
+Production is now live on commit `fbd96b16`, which downgraded Vercel cron schedules to fit Hobby.
+Deployment is no longer blocked.
+The remaining problem is that daily cron is far too infrequent for many current health thresholds, so `api/health` is still heavily `UNHEALTHY`.
 
-- `/api/cron-warm` is still `404`
-- `/api/cron-seed-national-debt` is still `404`
-- `api/health` is still `UNHEALTHY`
-- lots of seed data is still missing
+## Current truth
 
-## Why production is stuck
-
-Latest head had:
-
-- `Test`: success
-- `Typecheck`: failure
-- `Lint Code`: failure
-
-So Vercel never deployed the cron-support commits.
+- Production alias points to Vercel deployment `dpl_3s354GtmU7t9WQhB78LkogVDGtbi`
+- GitHub status for `fbd96b16` is fully `success`
+- Latest checked health snapshot was `106 total / 5 ok / 25 warn / 76 crit`
+- Direct manual `curl` to `/api/cron-warm`, `/api/cron-seed-national-debt`, and `/api/seed-health` still returns `403`
 
 ## Immediate next fix
 
-Check and finish these local changes first:
+Do not chase the old CI issue trail.
+The real next decision is whether to:
 
-- `api/cron-seed-national-debt.ts`
-- `tests/mcp-proxy.test.mjs`
-
-Those are the last known edits aimed at clearing current `Typecheck` + `Lint` blockers.
+1. accept "deploys on Hobby" as done
+2. re-tune `api/health.js` for daily cron reality
+3. add another refresh path outside Vercel Hobby cron limits
 
 ## Secrets
 
@@ -47,9 +40,7 @@ Do not put raw secrets into git-tracked notes.
 
 ## Then do this
 
-1. Get `Typecheck` green
-2. Get `Lint Code` green
-3. Confirm Vercel production moves off `84d1da4a`
-4. Hit `/api/cron-warm?group=fast`
-5. Hit `/api/cron-seed-national-debt`
-6. Recheck `/api/health?compact=1` and `/api/seed-health`
+1. Confirm production is still on `fbd96b16`
+2. Recheck `/api/health?compact=1`
+3. Decide whether to relax health thresholds or add another refresh mechanism
+4. Validate future scheduled runs from Vercel logs or freshness metadata, not only direct `curl`
