@@ -65,10 +65,10 @@ describe('callLlm', () => {
     });
 
     assert.ok(result);
-    assert.equal(result.provider, 'groq');
-    assert.equal(result.model, 'llama-3.1-8b-instant');
+    assert.equal(result.provider, 'openrouter');
+    assert.equal(result.model, 'google/gemini-2.5-flash');
     assert.deepEqual(postUrls.filter(url => url.includes('/chat/completions')), [
-      'https://api.groq.com/openai/v1/chat/completions',
+      'https://openrouter.ai/api/v1/chat/completions',
     ]);
   });
 

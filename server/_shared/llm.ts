@@ -8,7 +8,7 @@ export interface ProviderCredentials {
   extraBody?: Record<string, unknown>;
 }
 
-export type LlmProviderName = 'ollama' | 'openrouter' | 'generic';
+export type LlmProviderName = 'ollama' | 'generic' | 'openrouter' | 'groq';
 
 export interface ProviderCredentialOverrides {
   model?: string;
@@ -70,10 +70,24 @@ export function getProviderCredentials(
       headers['X-Title'] = 'SFC-Monitor';
     }
 
+    const baseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl : `${apiBaseUrl}/`;
     return {
-      apiUrl: new URL('/chat/completions', apiBaseUrl).toString(),
+      apiUrl: new URL('chat/completions', baseUrl).toString(),
       model: overrides.model || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash',
       headers,
+    };
+  }
+
+  if (provider === 'groq') {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return null;
+    return {
+      apiUrl: 'https://api.groq.com/openai/v1/chat/completions',
+      model: overrides.model || process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
     };
   }
 
@@ -117,7 +131,7 @@ export function stripThinkingTags(text: string): string {
 
 // Prefer a configured OpenAI-compatible endpoint before OpenRouter so hosted
 // deployments can route through a single generic provider without touching code.
-const PROVIDER_CHAIN = ['ollama', 'generic', 'openrouter'] as const;
+const PROVIDER_CHAIN = ['ollama', 'generic', 'openrouter', 'groq'] as const;
 const PROVIDER_SET = new Set<string>(PROVIDER_CHAIN);
 
 export interface LlmCallOptions {

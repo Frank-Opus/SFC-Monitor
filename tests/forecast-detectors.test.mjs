@@ -1173,11 +1173,13 @@ describe('forecast llm overrides', () => {
     const options = getForecastLlmCallOptions('combined');
     const providers = resolveForecastLlmProviders(options);
 
-    assert.deepEqual(options.providerOrder, ['groq', 'openrouter']);
-    assert.equal(providers[0]?.name, 'groq');
-    assert.equal(providers[0]?.model, 'llama-3.1-8b-instant');
+    assert.deepEqual(options.providerOrder, ['generic', 'openrouter', 'groq']);
+    assert.equal(providers[0]?.name, 'generic');
+    assert.equal(providers[0]?.model, 'gpt-3.5-turbo');
     assert.equal(providers[1]?.name, 'openrouter');
     assert.equal(providers[1]?.model, 'google/gemini-2.5-flash');
+    assert.equal(providers[2]?.name, 'groq');
+    assert.equal(providers[2]?.model, 'llama-3.1-8b-instant');
   });
 
   it('supports a stronger combined-model override without changing scenario defaults', () => {
@@ -1194,9 +1196,10 @@ describe('forecast llm overrides', () => {
     assert.equal(combinedProviders[0]?.name, 'openrouter');
     assert.equal(combinedProviders[0]?.model, 'google/gemini-2.5-pro');
 
-    assert.deepEqual(scenarioOptions.providerOrder, ['groq', 'openrouter']);
-    assert.equal(scenarioProviders[0]?.name, 'groq');
+    assert.deepEqual(scenarioOptions.providerOrder, ['generic', 'openrouter', 'groq']);
+    assert.equal(scenarioProviders[0]?.name, 'generic');
     assert.equal(scenarioProviders[1]?.model, 'google/gemini-2.5-flash');
+    assert.equal(scenarioProviders[2]?.name, 'groq');
   });
 
   it('lets a global provider order and openrouter model apply to non-combined stages', () => {

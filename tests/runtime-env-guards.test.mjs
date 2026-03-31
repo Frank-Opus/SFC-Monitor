@@ -33,9 +33,11 @@ describe('variant env guards', () => {
     );
   });
 
-  it('reuses buildVariant for SSR, Tauri, and localhost fallback paths', () => {
-    const buildVariantUses = variantSrc.match(/return buildVariant;/g) ?? [];
-    assert.equal(buildVariantUses.length, 3, `Expected three buildVariant fallbacks, got ${buildVariantUses.length}`);
+  it('reuses buildVariant for SSR and local variant fallback paths', () => {
+    const buildVariantUses = variantSrc.match(/buildVariant/g) ?? [];
+    assert.ok(buildVariantUses.length >= 3, `Expected buildVariant to be reused across variant resolution, got ${buildVariantUses.length}`);
     assert.ok(variantSrc.includes("if (typeof window === 'undefined') return buildVariant;"), 'SSR should fall back to buildVariant');
+    assert.ok(variantSrc.includes("return getStoredVariant() || buildVariant;"), 'Tauri should fall back to buildVariant after stored variant');
+    assert.ok(variantSrc.includes("return getUrlVariant() || getStoredVariant() || buildVariant;"), 'localhost should eventually fall back to buildVariant');
   });
 });
