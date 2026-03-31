@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createServer, type Server } from 'node:http';
 import { afterEach, describe, it, before, after } from 'node:test';
 import { generateKeyPair, exportJWK, SignJWT } from 'jose';
 
@@ -65,9 +64,9 @@ describe('premium stock gateway enforcement', () => {
 describe('premium stock gateway bearer token auth', () => {
   let privateKey: CryptoKey;
   let wrongPrivateKey: CryptoKey;
-  let jwksServer: Server;
-  let jwksPort: number;
+  let issuerDomain: string;
   let handler: (req: Request) => Promise<Response>;
+  let originalFetch: typeof globalThis.fetch;
 
   before(async () => {
     const { publicKey, privateKey: pk } = await generateKeyPair('RS256');
@@ -82,23 +81,26 @@ describe('premium stock gateway bearer token auth', () => {
     publicJwk.use = 'sig';
     const jwks = { keys: [publicJwk] };
 
-    jwksServer = createServer((req, res) => {
-      if (req.url === '/.well-known/jwks.json') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(jwks));
-      } else {
-        res.writeHead(404);
-        res.end();
+    issuerDomain = 'https://clerk.test';
+    const jwksUrl = `${issuerDomain}/.well-known/jwks.json`;
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url === jwksUrl) {
+        return new Response(JSON.stringify(jwks), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
-    });
+      return originalFetch(input as RequestInfo | URL, init);
+    };
 
-    await new Promise<void>((resolve) => {
-      jwksServer.listen(0, '127.0.0.1', () => resolve());
-    });
-    const addr = jwksServer.address();
-    jwksPort = typeof addr === 'object' && addr ? addr.port : 0;
-
-    process.env.CLERK_JWT_ISSUER_DOMAIN = `http://127.0.0.1:${jwksPort}`;
+    process.env.CLERK_JWT_ISSUER_DOMAIN = issuerDomain;
     process.env.WORLDMONITOR_VALID_KEYS = 'real-key-123';
 
     handler = createDomainGateway([
@@ -116,14 +118,14 @@ describe('premium stock gateway bearer token auth', () => {
   });
 
   after(async () => {
-    jwksServer?.close();
+    globalThis.fetch = originalFetch;
     delete process.env.CLERK_JWT_ISSUER_DOMAIN;
   });
 
   function signToken(claims: Record<string, unknown>, opts?: { key?: CryptoKey; audience?: string }) {
     return new SignJWT(claims)
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' })
-      .setIssuer(`http://127.0.0.1:${jwksPort}`)
+      .setIssuer(issuerDomain)
       .setAudience(opts?.audience ?? 'convex')
       .setSubject(claims.sub as string ?? 'user_test')
       .setIssuedAt()

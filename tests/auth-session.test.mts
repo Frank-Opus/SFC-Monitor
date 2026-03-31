@@ -13,7 +13,6 @@
  */
 
 import assert from 'node:assert/strict';
-import { createServer, type Server } from 'node:http';
 import { describe, it, before, after } from 'node:test';
 import { generateKeyPair, exportJWK, SignJWT } from 'jose';
 
@@ -55,14 +54,14 @@ describe('validateBearerToken (no CLERK_JWT_ISSUER_DOMAIN)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Suite 2: full JWT validation with self-signed keys + local JWKS server
+// Suite 2: full JWT validation with self-signed keys + mocked JWKS fetch
 // ---------------------------------------------------------------------------
 
 describe('validateBearerToken (with JWKS)', () => {
   let privateKey: CryptoKey;
-  let jwksServer: Server;
-  let jwksPort: number;
+  let issuerDomain: string;
   let validateBearerToken: (token: string) => Promise<{ valid: boolean; userId?: string; role?: string }>;
+  let originalFetch: typeof globalThis.fetch;
 
   // Separate key pair for "wrong key" tests
   let wrongPrivateKey: CryptoKey;
@@ -82,26 +81,30 @@ describe('validateBearerToken (with JWKS)', () => {
     publicJwk.use = 'sig';
     const jwks = { keys: [publicJwk] };
 
-    // Start a local HTTP server serving the JWKS
-    jwksServer = createServer((req, res) => {
-      if (req.url === '/.well-known/jwks.json') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(jwks));
-      } else {
-        res.writeHead(404);
-        res.end();
+    // Avoid loopback HTTP in tests because CI/proxy wrappers may intercept fetch().
+    // Mock only the JWKS URL and keep JWT verification logic real.
+    issuerDomain = 'https://clerk.test';
+    const jwksUrl = `${issuerDomain}/.well-known/jwks.json`;
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url === jwksUrl) {
+        return new Response(JSON.stringify(jwks), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
-    });
+      return originalFetch(input as RequestInfo | URL, init);
+    };
 
-    await new Promise<void>((resolve) => {
-      jwksServer.listen(0, '127.0.0.1', () => resolve());
-    });
-    const addr = jwksServer.address();
-    jwksPort = typeof addr === 'object' && addr ? addr.port : 0;
-
-    // Set the issuer domain to the local JWKS server and re-import the module
+    // Set the issuer domain and re-import the module
     // (fresh import since the module caches JWKS at first use)
-    process.env.CLERK_JWT_ISSUER_DOMAIN = `http://127.0.0.1:${jwksPort}`;
+    process.env.CLERK_JWT_ISSUER_DOMAIN = issuerDomain;
 
     // Dynamic import with cache-busting query param to get a fresh module instance
     const mod = await import(`../server/auth-session.ts?t=${Date.now()}`);
@@ -109,7 +112,7 @@ describe('validateBearerToken (with JWKS)', () => {
   });
 
   after(async () => {
-    jwksServer?.close();
+    globalThis.fetch = originalFetch;
     delete process.env.CLERK_JWT_ISSUER_DOMAIN;
   });
 
@@ -117,7 +120,7 @@ describe('validateBearerToken (with JWKS)', () => {
   function signToken(claims: Record<string, unknown>, opts?: { expiresIn?: string; key?: CryptoKey }) {
     const builder = new SignJWT(claims)
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' })
-      .setIssuer(`http://127.0.0.1:${jwksPort}`)
+      .setIssuer(issuerDomain)
       .setAudience('convex')
       .setSubject(claims.sub as string ?? 'user_test123')
       .setIssuedAt();
@@ -166,7 +169,7 @@ describe('validateBearerToken (with JWKS)', () => {
   it('rejects an expired token', async () => {
     const token = await new SignJWT({ sub: 'user_expired', plan: 'pro' })
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' })
-      .setIssuer(`http://127.0.0.1:${jwksPort}`)
+      .setIssuer(issuerDomain)
       .setAudience('convex')
       .setSubject('user_expired')
       .setIssuedAt(Math.floor(Date.now() / 1000) - 7200) // 2h ago
@@ -189,7 +192,7 @@ describe('validateBearerToken (with JWKS)', () => {
     // The issuer check prevents cross-app token reuse.
     const token = await new SignJWT({ sub: 'user_anyaud', plan: 'pro' })
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' })
-      .setIssuer(`http://127.0.0.1:${jwksPort}`)
+      .setIssuer(issuerDomain)
       .setAudience('some-other-audience')
       .setSubject('user_anyaud')
       .setIssuedAt()
@@ -218,7 +221,7 @@ describe('validateBearerToken (with JWKS)', () => {
   it('rejects a token with no sub claim', async () => {
     const token = await new SignJWT({ plan: 'pro' })
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' })
-      .setIssuer(`http://127.0.0.1:${jwksPort}`)
+      .setIssuer(issuerDomain)
       .setAudience('convex')
       .setIssuedAt()
       .setExpirationTime('1h')

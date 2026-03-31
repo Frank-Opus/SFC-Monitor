@@ -10,20 +10,26 @@
 
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-// Clerk JWT issuer domain -- set in Vercel env vars
-const CLERK_JWT_ISSUER_DOMAIN = process.env.CLERK_JWT_ISSUER_DOMAIN ?? '';
+function getIssuerDomain(): string {
+  return process.env.CLERK_JWT_ISSUER_DOMAIN ?? '';
+}
 
-// Clerk Backend API secret -- used to look up user metadata when the JWT
-// does not include a `plan` claim (i.e. standard session token, no template).
-const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY ?? '';
+function getClerkSecretKey(): string {
+  return process.env.CLERK_SECRET_KEY ?? '';
+}
 
 // Module-scope JWKS resolver -- cached across warm invocations.
 // jose handles key rotation and caching internally.
 let _jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+let _jwksIssuer = '';
 function getJWKS() {
-  if (!_jwks && CLERK_JWT_ISSUER_DOMAIN) {
-    const jwksUrl = new URL('/.well-known/jwks.json', CLERK_JWT_ISSUER_DOMAIN);
+  const issuerDomain = getIssuerDomain();
+  if (!issuerDomain) return null;
+
+  if (!_jwks || _jwksIssuer !== issuerDomain) {
+    const jwksUrl = new URL('/.well-known/jwks.json', issuerDomain);
     _jwks = createRemoteJWKSet(jwksUrl);
+    _jwksIssuer = issuerDomain;
   }
   return _jwks;
 }
@@ -43,10 +49,11 @@ async function lookupPlanFromClerk(userId: string): Promise<'free' | 'pro'> {
   const cached = _planCache.get(userId);
   if (cached && Date.now() < cached.expiresAt) return cached.role;
 
-  if (!CLERK_SECRET_KEY) return 'free';
+  const clerkSecretKey = getClerkSecretKey();
+  if (!clerkSecretKey) return 'free';
   try {
     const resp = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-      headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` },
+      headers: { Authorization: `Bearer ${clerkSecretKey}` },
     });
     if (!resp.ok) return 'free';
     const user = (await resp.json()) as { public_metadata?: Record<string, unknown> };
@@ -65,8 +72,9 @@ async function lookupPlanFromClerk(userId: string): Promise<'free' | 'pro'> {
  * Fails closed: invalid/expired/unverifiable tokens return { valid: false }.
  */
 export async function validateBearerToken(token: string): Promise<SessionResult> {
+  const issuerDomain = getIssuerDomain();
   const jwks = getJWKS();
-  if (!jwks) return { valid: false };
+  if (!jwks || !issuerDomain) return { valid: false };
 
   try {
     // Verify signature and issuer. We intentionally skip the audience check so
@@ -75,7 +83,7 @@ export async function validateBearerToken(token: string): Promise<SessionResult>
     // sufficient to prevent cross-app token reuse since each Clerk instance
     // has its own JWKS endpoint.
     const { payload } = await jwtVerify(token, jwks, {
-      issuer: CLERK_JWT_ISSUER_DOMAIN,
+      issuer: issuerDomain,
       algorithms: ['RS256'],
     });
 
