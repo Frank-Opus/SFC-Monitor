@@ -355,10 +355,19 @@ export function createDomainGateway(
         const rpcName = pathname.split('/').pop() ?? '';
         const envOverride = process.env[`CACHE_TIER_OVERRIDE_${rpcName.replace(/-/g, '_').toUpperCase()}`] as CacheTier | undefined;
         const tier = (envOverride && envOverride in TIER_HEADERS ? envOverride : null) ?? RPC_CACHE_TIER[pathname] ?? 'medium';
-        mergedHeaders.set('Cache-Control', TIER_HEADERS[tier]);
-        const cdnCache = TIER_CDN_CACHE[tier];
-        if (cdnCache) mergedHeaders.set('CDN-Cache-Control', cdnCache);
-        mergedHeaders.set('X-Cache-Tier', tier);
+        const isPublicFinanceRead = /^\/api\/(market|economic|trade|aviation|prediction|conflict|wildfire|webcam)\/v1\//.test(pathname);
+        if (isPublicFinanceRead) {
+          // These public read endpoints were previously poisoned by cached 403s on the new domain.
+          // Disable CDN caching so origin/auth fixes take effect immediately.
+          mergedHeaders.set('Cache-Control', 'no-store');
+          mergedHeaders.set('CDN-Cache-Control', 'no-store');
+          mergedHeaders.set('X-Cache-Tier', 'no-store');
+        } else {
+          mergedHeaders.set('Cache-Control', TIER_HEADERS[tier]);
+          const cdnCache = TIER_CDN_CACHE[tier];
+          if (cdnCache) mergedHeaders.set('CDN-Cache-Control', cdnCache);
+          mergedHeaders.set('X-Cache-Tier', tier);
+        }
 
         // Keep per-origin ACAO (already set from corsHeaders above) and preserve Vary: Origin.
         // ACAO: * with no Vary would collapse all origins into one cache entry, bypassing
