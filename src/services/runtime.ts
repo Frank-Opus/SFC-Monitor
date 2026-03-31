@@ -123,7 +123,8 @@ export function getApiBaseUrl(): string {
 function isWorldMonitorWebHost(hostname: string): boolean {
   return hostname === 'worldmonitor.app'
     || hostname === 'www.worldmonitor.app'
-    || hostname.endsWith('.worldmonitor.app');
+    || hostname.endsWith('.worldmonitor.app')
+    || /^sfc-monitor(?:-[a-z0-9-]+)*\.vercel\.app$/i.test(hostname);
 }
 
 export function getConfiguredWebApiBaseUrl(): string {

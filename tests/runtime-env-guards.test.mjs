@@ -23,6 +23,13 @@ describe('runtime env guards', () => {
     assert.ok(runtimeSrc.includes('const configuredRemoteBase = ENV.VITE_TAURI_REMOTE_API_BASE_URL;'), 'Remote API base should read from ENV');
     assert.ok(runtimeSrc.includes('...extractHostnames(WS_API_URL, ENV.VITE_WS_RELAY_URL)'), 'Relay host extraction should read from ENV');
   });
+
+  it('treats the deployed sfc-monitor Vercel host as a trusted web host', () => {
+    assert.match(
+      runtimeSrc,
+      /\|\| \/\^sfc-monitor\(\?:-\[a-z0-9-\]\+\)\*\\\.vercel\\\.app\$\/i\.test\(hostname\);/,
+    );
+  });
 });
 
 describe('variant env guards', () => {
