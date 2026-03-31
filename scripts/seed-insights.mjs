@@ -75,7 +75,7 @@ async function readExistingInsights() {
 }
 
 // Provider config — mirrors server/_shared/llm.ts getProviderCredentials()
-// Order: ollama → groq → openrouter (canonical chain)
+// Order: ollama -> generic OpenAI-compatible -> OpenRouter -> Groq fallback.
 const LLM_PROVIDERS = [
   {
     name: 'ollama',

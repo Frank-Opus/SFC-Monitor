@@ -115,7 +115,9 @@ export function stripThinkingTags(text: string): string {
   return s;
 }
 
-const PROVIDER_CHAIN = ['ollama', 'openrouter', 'generic'] as const;
+// Prefer a configured OpenAI-compatible endpoint before OpenRouter so hosted
+// deployments can route through a single generic provider without touching code.
+const PROVIDER_CHAIN = ['ollama', 'generic', 'openrouter'] as const;
 const PROVIDER_SET = new Set<string>(PROVIDER_CHAIN);
 
 export interface LlmCallOptions {
