@@ -1,7 +1,7 @@
 {
   "crons": [
-    { "path": "/api/cron-warm?group=fast", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron-warm?group=hourly", "schedule": "17 * * * *" },
+    { "path": "/api/cron-warm?group=fast", "schedule": "5 0 * * *" },
+    { "path": "/api/cron-warm?group=hourly", "schedule": "35 0 * * *" },
     { "path": "/api/cron-seed-national-debt", "schedule": "23 3 1 * *" }
   ],
   "redirects": [
