@@ -7,8 +7,8 @@ loadEnvFile(import.meta.url);
 const IMF_BASE = 'https://www.imf.org/external/datamapper/api/v1';
 const TREASURY_URL = 'https://api.fiscaldata.treasury.gov/services/api/v1/accounting/od/debt_to_penny?fields=record_date,tot_pub_debt_out_amt&sort=-record_date&page[size]=1';
 
-const CANONICAL_KEY = 'economic:national-debt:v1';
-const CACHE_TTL = 35 * 24 * 3600; // 35 days — monthly cron with buffer
+export const CANONICAL_KEY = 'economic:national-debt:v1';
+export const CACHE_TTL = 35 * 24 * 3600; // 35 days — monthly cron with buffer
 
 // IMF WEO regional aggregate codes (not real sovereign countries)
 const AGGREGATE_CODES = new Set([
@@ -115,7 +115,7 @@ export function computeEntries(debtPctByCountry, gdpByCountry, deficitPctByCount
   return entries;
 }
 
-async function fetchNationalDebt() {
+export async function fetchNationalDebt() {
   const [debtPctData, gdpData, deficitData, treasury] = await Promise.all([
     fetchImfIndicator('GGXWDG_NGDP', '2023,2024', 30_000),
     fetchImfIndicator('NGDPD', '2024', 30_000),
@@ -131,7 +131,7 @@ async function fetchNationalDebt() {
   };
 }
 
-function validate(data) {
+export function validate(data) {
   return Array.isArray(data?.entries) && data.entries.length >= 100;
 }
 
