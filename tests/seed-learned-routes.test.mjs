@@ -155,7 +155,7 @@ describe('bulkWriteLearnedRoutes', () => {
 
   it('sends SET with 14-day TTL for updated keys', async () => {
     let capturedBody;
-    const restore = mockFetch(async (url, opts) => {
+    const restore = mockFetch(async (_url, opts) => {
       capturedBody = JSON.parse(opts.body);
       return { ok: true, json: async () => [] };
     });
@@ -173,7 +173,7 @@ describe('bulkWriteLearnedRoutes', () => {
 
   it('sends DEL for evicted keys not in updates', async () => {
     let capturedBody;
-    const restore = mockFetch(async (url, opts) => {
+    const restore = mockFetch(async (_url, opts) => {
       capturedBody = JSON.parse(opts.body);
       return { ok: true, json: async () => [] };
     });

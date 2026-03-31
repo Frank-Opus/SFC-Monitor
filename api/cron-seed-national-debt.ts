@@ -1,5 +1,8 @@
+// @ts-expect-error Shared JS helper is imported by Vercel runtime; API typecheck lacks module declarations here.
 import { jsonResponse } from './_json-response.js';
+// @ts-expect-error Seed utilities stay in JS/MJS for runtime reuse; API typecheck only needs surface compatibility.
 import { atomicPublish, writeFreshnessMetadata } from '../scripts/_seed-utils.mjs';
+// @ts-expect-error National debt seeder remains MJS so CLI and Vercel can share one implementation.
 import {
   CACHE_TTL,
   CANONICAL_KEY,

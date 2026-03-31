@@ -1,3 +1,4 @@
+// @ts-expect-error Shared JS helper is imported by Vercel runtime; API typecheck lacks module declarations here.
 import { jsonResponse } from './_json-response.js';
 
 const GROUPS: Record<string, string[]> = {
