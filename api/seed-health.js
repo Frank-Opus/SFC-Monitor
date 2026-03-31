@@ -140,6 +140,7 @@ export default async function handler(req) {
 
   return jsonResponse({ overall, seeds, checkedAt: now }, httpStatus, {
     ...cors,
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'private, no-store, max-age=0',
+    'CDN-Cache-Control': 'no-store',
   });
 }

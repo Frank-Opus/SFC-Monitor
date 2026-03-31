@@ -59,6 +59,16 @@ describe('Edge Function no node: built-ins', () => {
   }
 });
 
+describe('health endpoints disable CDN caching', () => {
+  for (const file of ['health.js', 'seed-health.js']) {
+    it(`${file} sets no-store cache headers`, () => {
+      const src = readFileSync(join(apiDir, file), 'utf-8');
+      assert.ok(src.includes("'Cache-Control': 'private, no-store, max-age=0'"), `${file} must disable browser caching`);
+      assert.ok(src.includes("'CDN-Cache-Control': 'no-store'"), `${file} must disable CDN caching`);
+    });
+  }
+});
+
 describe('Legacy api/*.js endpoint allowlist', () => {
   const ALLOWED_LEGACY_ENDPOINTS = new Set([
     'ais-snapshot.js',
