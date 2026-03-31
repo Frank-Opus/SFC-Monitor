@@ -399,7 +399,7 @@ describe('api/mcp-proxy', () => {
   describe('SSE content-type response parsing', () => {
     it('parses JSON-RPC result from SSE response body', async () => {
       const sseTools = [{ name: 'web_search', description: 'Search', inputSchema: {} }];
-      globalThis.fetch = async (url, opts) => {
+      globalThis.fetch = async (_url, opts) => {
         const body = opts?.body ? JSON.parse(opts.body) : {};
         if (body.method === 'initialize') {
           const sseData = `data: ${JSON.stringify({ jsonrpc: '2.0', id: 1, result: { protocolVersion: '2025-03-26', capabilities: {} } })}\n\n`;
