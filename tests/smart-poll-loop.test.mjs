@@ -31,35 +31,52 @@ function stripTS(src) {
 
 const runtimeSrc = stripTS(rawSrc);
 
-function extractBody(source, funcName) {
+function findFunctionBodyStart(source, funcName) {
   const sig = new RegExp(`function\\s+${funcName}\\s*\\(`);
   const match = sig.exec(source);
   if (!match) throw new Error(`Could not find function ${funcName}`);
 
   const openBrace = source.indexOf('{', match.index);
   if (openBrace === -1) throw new Error(`No body found for ${funcName}`);
-  const bodyStart = openBrace + 1;
+  return openBrace + 1;
+}
+
+function advanceParserState(state, ch, next) {
+  if (state === 'line-comment') return ch === '\n' ? { state: 'code' } : { state, skip: true };
+  if (state === 'block-comment') return ch === '*' && next === '/' ? { state: 'code', skip: true, advance: 1 } : { state, skip: true };
+  if (state === 'single-quote') return ch === "'" && !state.escaped ? { state: 'code', skip: true } : { state: 'single-quote', escaped: ch === '\\' && !state.escaped, skip: true };
+  if (state === 'double-quote') return ch === '"' && !state.escaped ? { state: 'code', skip: true } : { state: 'double-quote', escaped: ch === '\\' && !state.escaped, skip: true };
+  if (state === 'template') return ch === '`' && !state.escaped ? { state: 'code', skip: true } : { state: 'template', escaped: ch === '\\' && !state.escaped, skip: true };
+  if (ch === '/' && next === '/') return { state: 'line-comment', skip: true, advance: 1 };
+  if (ch === '/' && next === '*') return { state: 'block-comment', skip: true, advance: 1 };
+  if (ch === "'") return { state: 'single-quote', escaped: false, skip: true };
+  if (ch === '"') return { state: 'double-quote', escaped: false, skip: true };
+  if (ch === '`') return { state: 'template', escaped: false, skip: true };
+  return { state: 'code', escaped: false, skip: false, advance: 0 };
+}
+
+function extractBody(source, funcName) {
+  const bodyStart = findFunctionBodyStart(source, funcName);
   let depth = 1;
-  let state = 'code';
-  let escaped = false;
+  let parser = { state: 'code', escaped: false };
 
   for (let j = bodyStart; j < source.length; j++) {
     const ch = source[j];
     const next = source[j + 1];
+    const nextParser = advanceParserState(parser.state, ch, next);
 
-    if (state === 'line-comment') { if (ch === '\n') state = 'code'; continue; }
-    if (state === 'block-comment') { if (ch === '*' && next === '/') { state = 'code'; j++; } continue; }
-    if (state === 'single-quote') { if (escaped) { escaped = false; } else if (ch === '\\') { escaped = true; } else if (ch === "'") { state = 'code'; } continue; }
-    if (state === 'double-quote') { if (escaped) { escaped = false; } else if (ch === '\\') { escaped = true; } else if (ch === '"') { state = 'code'; } continue; }
-    if (state === 'template') { if (escaped) { escaped = false; } else if (ch === '\\') { escaped = true; } else if (ch === '`') { state = 'code'; } continue; }
+    parser = { state: nextParser.state, escaped: Boolean(nextParser.escaped) };
+    if (nextParser.advance) j += nextParser.advance;
+    if (nextParser.skip) continue;
 
-    if (ch === '/' && next === '/') { state = 'line-comment'; j++; continue; }
-    if (ch === '/' && next === '*') { state = 'block-comment'; j++; continue; }
-    if (ch === "'") { state = 'single-quote'; continue; }
-    if (ch === '"') { state = 'double-quote'; continue; }
-    if (ch === '`') { state = 'template'; continue; }
-    if (ch === '{') { depth++; continue; }
-    if (ch === '}') { depth--; if (depth === 0) return source.slice(bodyStart, j); }
+    if (ch === '{') {
+      depth++;
+      continue;
+    }
+    if (ch === '}') {
+      depth--;
+      if (depth === 0) return source.slice(bodyStart, j);
+    }
   }
   throw new Error(`Could not extract body for ${funcName}`);
 }
@@ -537,7 +554,7 @@ describe('startSmartPollLoop', () => {
 
     it('abort errors do not trigger backoff', async () => {
       let calls = 0;
-      startSmartPollLoop((ctx) => {
+      startSmartPollLoop((_ctx) => {
         calls++;
         const err = new Error('aborted');
         err.name = 'AbortError';
@@ -556,7 +573,7 @@ describe('startSmartPollLoop', () => {
   describe('in-flight guard', () => {
     it('concurrent calls are deferred, not dropped', async () => {
       let calls = 0;
-      let resolvers = [];
+      const resolvers = [];
       const handle = startSmartPollLoop(() => {
         calls++;
         return new Promise(r => resolvers.push(r));
@@ -590,7 +607,7 @@ describe('startSmartPollLoop', () => {
       let subscribeCalls = 0;
       let unsubscribeCalls = 0;
       const fakeHub = {
-        subscribe(cb) {
+        subscribe(_cb) {
           subscribeCalls++;
           return () => { unsubscribeCalls++; };
         },
