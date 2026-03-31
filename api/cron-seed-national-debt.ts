@@ -1,13 +1,9 @@
+// @ts-ignore API typecheck has no declarations for adjacent JS helpers.
 import { jsonResponse } from './_json-response.js';
-// @ts-expect-error Shared MJS helper has no declarations in API typecheck.
+// @ts-ignore API typecheck has no declarations for shared MJS seed helpers.
 import { atomicPublish, writeFreshnessMetadata } from '../scripts/_seed-utils.mjs';
-// @ts-expect-error National debt seeder remains MJS so CLI and Vercel can share one implementation.
-import {
-  CACHE_TTL,
-  CANONICAL_KEY,
-  fetchNationalDebt,
-  validate,
-} from '../scripts/seed-national-debt.mjs';
+// @ts-ignore Seeder remains MJS so CLI and Vercel can share one implementation.
+import { CACHE_TTL, CANONICAL_KEY, fetchNationalDebt, validate } from '../scripts/seed-national-debt.mjs';
 
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
