@@ -7,7 +7,7 @@ import {
   validate,
 } from '../scripts/seed-national-debt.mjs';
 
-function authorized(req) {
+function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get('authorization') || '';
   if (secret && auth === `Bearer ${secret}`) return true;
@@ -16,7 +16,7 @@ function authorized(req) {
 
 export const config = { maxDuration: 60 };
 
-export default async function handler(req) {
+export default async function handler(req: Request) {
   if (req.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405, { 'Cache-Control': 'no-store' });
   }

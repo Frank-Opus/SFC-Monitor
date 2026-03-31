@@ -75,8 +75,6 @@ describe('Legacy api/*.js endpoint allowlist', () => {
     'bootstrap.js',
     'cache-purge.js',
     'contact.js',
-    'cron-seed-national-debt.js',
-    'cron-warm.js',
     'download.js',
     'fwdstart.js',
     'geo.js',

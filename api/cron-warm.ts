@@ -1,6 +1,6 @@
 import { jsonResponse } from './_json-response.js';
 
-const GROUPS = {
+const GROUPS: Record<string, string[]> = {
   fast: [
     '/api/infrastructure/v1/list-service-statuses',
     '/api/infrastructure/v1/get-cable-health',
@@ -19,14 +19,14 @@ const GROUPS = {
   ],
 };
 
-function authorized(req) {
+function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get('authorization') || '';
   if (secret && auth === `Bearer ${secret}`) return true;
   return req.headers.get('x-vercel-cron') === '1';
 }
 
-async function warmEndpoint(origin, path) {
+async function warmEndpoint(origin: string, path: string) {
   const startedAt = Date.now();
   const url = `${origin}${path}`;
   try {
@@ -60,7 +60,7 @@ async function warmEndpoint(origin, path) {
 
 export const config = { maxDuration: 60 };
 
-export default async function handler(req) {
+export default async function handler(req: Request) {
   if (req.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405, { 'Cache-Control': 'no-store' });
   }
