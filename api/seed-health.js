@@ -136,9 +136,7 @@ export default async function handler(req) {
 
   const overall = missingCount > 0 ? 'degraded' : staleCount > 0 ? 'warning' : 'healthy';
 
-  const httpStatus = overall === 'healthy' ? 200 : overall === 'warning' ? 200 : 503;
-
-  return jsonResponse({ overall, seeds, checkedAt: now }, httpStatus, {
+  return jsonResponse({ overall, seeds, checkedAt: now }, 200, {
     ...cors,
     'Cache-Control': 'private, no-store, max-age=0',
     'CDN-Cache-Control': 'no-store',
