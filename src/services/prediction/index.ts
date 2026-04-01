@@ -3,6 +3,7 @@ import { getRpcBaseUrl } from '@/services/rpc-client';
 import { createCircuitBreaker } from '@/utils';
 import { SITE_VARIANT } from '@/config';
 import { getHydratedData } from '@/services/bootstrap';
+import { toApiUrl } from '@/services/runtime';
 
 export interface PredictionMarket {
   title: string;
@@ -37,6 +38,36 @@ interface BootstrapPredictionData {
   fetchedAt: number;
 }
 
+function selectVariantPredictions(data: BootstrapPredictionData | undefined): PredictionMarket[] {
+  if (!data) return [];
+  return SITE_VARIANT === 'tech' ? (data.tech ?? [])
+    : SITE_VARIANT === 'finance' ? (data.finance ?? data.geopolitical ?? [])
+    : (data.geopolitical ?? []);
+}
+
+function normalizeBootstrapPredictions(data: BootstrapPredictionData | undefined): PredictionMarket[] {
+  return selectVariantPredictions(data)
+    .filter(m => !isExpired(m.endDate))
+    .slice(0, 25)
+    .map(m => m.source ? m : { ...m, source: 'polymarket' as const });
+}
+
+async function fetchBootstrapPredictions(): Promise<BootstrapPredictionData | undefined> {
+  try {
+    const resp = await globalThis.fetch(toApiUrl('/api/bootstrap?keys=predictions'), {
+      signal: AbortSignal.timeout(8_000),
+      headers: { Accept: 'application/json' },
+    });
+    if (!resp.ok) return undefined;
+    const payload = await resp.json() as {
+      data?: { predictions?: BootstrapPredictionData };
+    };
+    return payload.data?.predictions;
+  } catch {
+    return undefined;
+  }
+}
+
 const REGION_PATTERNS: Record<string, RegExp> = {
   america: /\b(us|u\.s\.|united states|america|trump|biden|congress|federal reserve|canada|mexico|brazil)\b/i,
   eu: /\b(europe|european|eu|nato|germany|france|uk|britain|macron|ecb)\b/i,
@@ -69,37 +100,45 @@ export async function fetchPredictions(opts?: { region?: string }): Promise<Pred
   const markets = await breaker.execute(async () => {
     const hydrated = getHydratedData('predictions') as BootstrapPredictionData | undefined;
     if (hydrated?.fetchedAt && Date.now() - hydrated.fetchedAt < 40 * 60 * 1000) {
-      const variant = SITE_VARIANT === 'tech' ? hydrated.tech
-        : SITE_VARIANT === 'finance' ? (hydrated.finance ?? hydrated.geopolitical)
-        : hydrated.geopolitical;
-      if (variant && variant.length > 0) {
-        return variant
-          .filter(m => !isExpired(m.endDate))
-          .slice(0, 25)
-          .map(m => m.source ? m : { ...m, source: 'polymarket' as const });
-      }
+      const initial = normalizeBootstrapPredictions(hydrated);
+      if (initial.length > 0) return initial;
+    }
+
+    const bootstrap = await fetchBootstrapPredictions();
+    if (bootstrap?.fetchedAt && Date.now() - bootstrap.fetchedAt < 40 * 60 * 1000) {
+      const bootstrapMarkets = normalizeBootstrapPredictions(bootstrap);
+      if (bootstrapMarkets.length > 0) return bootstrapMarkets;
     }
 
     const tags = SITE_VARIANT === 'tech' ? TECH_TAGS
       : SITE_VARIANT === 'finance' ? FINANCE_TAGS
       : GEOPOLITICAL_TAGS;
-    const rpcResults = await client.listPredictionMarkets({
-      category: tags[0] ?? '',
-      query: '',
-      pageSize: 50,
-      cursor: '',
-    });
-    if (rpcResults.markets && rpcResults.markets.length > 0) {
-      return rpcResults.markets
-        .map(protoToMarket)
-        .filter(m => !isExpired(m.endDate))
-        .filter(m => m.yesPrice >= 10 && m.yesPrice <= 90)
-        .sort((a, b) => {
-          const aUncertainty = 1 - (2 * Math.abs(a.yesPrice - 50) / 100);
-          const bUncertainty = 1 - (2 * Math.abs(b.yesPrice - 50) / 100);
-          return bUncertainty - aUncertainty;
-        })
-        .slice(0, 25);
+    try {
+      const rpcResults = await client.listPredictionMarkets({
+        category: tags[0] ?? '',
+        query: '',
+        pageSize: 50,
+        cursor: '',
+      });
+      if (rpcResults.markets && rpcResults.markets.length > 0) {
+        return rpcResults.markets
+          .map(protoToMarket)
+          .filter(m => !isExpired(m.endDate))
+          .filter(m => m.yesPrice >= 10 && m.yesPrice <= 90)
+          .sort((a, b) => {
+            const aUncertainty = 1 - (2 * Math.abs(a.yesPrice - 50) / 100);
+            const bUncertainty = 1 - (2 * Math.abs(b.yesPrice - 50) / 100);
+            return bUncertainty - aUncertainty;
+          })
+          .slice(0, 25);
+      }
+    } catch {
+      // Prefer bootstrap recovery below instead of surfacing a hard failure.
+    }
+
+    if (bootstrap) {
+      const fallbackBootstrapMarkets = normalizeBootstrapPredictions(bootstrap);
+      if (fallbackBootstrapMarkets.length > 0) return fallbackBootstrapMarkets;
     }
 
     throw new Error('No markets returned — upstream may be down');
@@ -134,7 +173,7 @@ export async function fetchCountryMarkets(country: string): Promise<PredictionMa
     }
   } catch { /* RPC failed, fall through to bootstrap filter */ }
 
-  const hydrated = getHydratedData('predictions') as BootstrapPredictionData | undefined;
+  const hydrated = (getHydratedData('predictions') as BootstrapPredictionData | undefined) ?? await fetchBootstrapPredictions();
   if (hydrated?.geopolitical?.length) {
     const lower = country.toLowerCase();
     const filtered = hydrated.geopolitical

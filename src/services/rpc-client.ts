@@ -1,7 +1,5 @@
-import { getConfiguredWebApiBaseUrl } from '@/services/runtime';
-
 export function getRpcBaseUrl(): string {
-  // Desktop keeps a relative base so installRuntimeFetchPatch() can resolve the
-  // latest sidecar port per request instead of freezing a stale module-load port.
-  return getConfiguredWebApiBaseUrl() || '';
+  // Keep RPC clients on a relative base so runtime fetch patching can route
+  // browser requests through the correct origin/proxy at request time.
+  return '';
 }

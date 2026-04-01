@@ -12,6 +12,8 @@ const PREMIUM_RPC_PATHS = new Set([
   '/api/market/v1/backtest-stock',
   '/api/market/v1/list-stored-stock-backtests',
 ]);
+const TECH_CATEGORY_TAGS = new Set(['ai', 'tech', 'crypto', 'science']);
+const FINANCE_CATEGORY_TAGS = new Set(['economy', 'fed', 'inflation', 'interest-rates', 'recession', 'trade', 'tariffs', 'debt-ceiling']);
 
 function json(body, status, headers = {}) {
   return new Response(JSON.stringify(body), {
@@ -46,6 +48,8 @@ function buildUpstreamHeaders(req) {
   const headers = new Headers();
   headers.set('Accept', req.headers.get('Accept') || 'application/json');
   headers.set('User-Agent', req.headers.get('User-Agent') || 'worldmonitor-sfc-preview-proxy/1.0');
+  headers.set('Origin', 'https://worldmonitor.app');
+  headers.set('Referer', 'https://worldmonitor.app/');
 
   const forwardedHeaderNames = [
     'Accept-Language',
@@ -62,6 +66,44 @@ function buildUpstreamHeaders(req) {
   }
 
   return headers;
+}
+
+function toProtoPredictionMarket(market, category) {
+  return {
+    id: String(market?.url || '').split('/').pop() || '',
+    title: String(market?.title || ''),
+    yesPrice: Number(market?.yesPrice ?? 50) / 100,
+    volume: Number(market?.volume ?? 0),
+    url: String(market?.url || ''),
+    closesAt: market?.endDate ? Date.parse(market.endDate) : 0,
+    category,
+    source: market?.source === 'kalshi' ? 'MARKET_SOURCE_KALSHI' : 'MARKET_SOURCE_POLYMARKET',
+  };
+}
+
+function buildPredictionMarketsFallback(requestUrl, bootstrapJson) {
+  const category = (requestUrl.searchParams.get('category') || '').slice(0, 50);
+  const query = (requestUrl.searchParams.get('query') || '').toLowerCase().slice(0, 100);
+  const pageSize = Math.max(1, Math.min(
+    Number(requestUrl.searchParams.get('page_size') || requestUrl.searchParams.get('pageSize') || '50') || 50,
+    100,
+  ));
+  const predictions = bootstrapJson?.data?.predictions || {};
+  const isTech = TECH_CATEGORY_TAGS.has(category);
+  const isFinance = !isTech && FINANCE_CATEGORY_TAGS.has(category);
+  const variant = isTech ? predictions.tech
+    : isFinance ? (predictions.finance || predictions.geopolitical)
+    : predictions.geopolitical;
+
+  let markets = Array.isArray(variant) ? variant : [];
+  if (query) {
+    markets = markets.filter((market) => String(market?.title || '').toLowerCase().includes(query));
+  }
+
+  return {
+    markets: markets.slice(0, pageSize).map((market) => toProtoPredictionMarket(market, category)),
+    pagination: undefined,
+  };
 }
 
 async function fetchBootstrapTier(req, tier) {
@@ -171,6 +213,25 @@ export default async function handler(req) {
     && req.method === 'GET'
   ) {
     return buildBootstrapKeysFallback(req, requestUrl, corsHeaders);
+  }
+
+  if (
+    upstreamResponse.status === 401
+    && upstreamPath === '/api/prediction/v1/list-prediction-markets'
+    && req.method === 'GET'
+  ) {
+    const fast = await fetchBootstrapTier(req, 'fast');
+    const headers = mergeHeaders(fast.response.headers);
+    for (const [key, value] of Object.entries(corsHeaders)) {
+      headers.set(key, value);
+    }
+    headers.set('Cache-Control', 'no-store');
+    headers.set('CDN-Cache-Control', 'no-store');
+    return json(
+      buildPredictionMarketsFallback(requestUrl, fast.json),
+      200,
+      Object.fromEntries(headers.entries()),
+    );
   }
 
   const headers = new Headers(upstreamResponse.headers);

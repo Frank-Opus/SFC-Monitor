@@ -38,8 +38,8 @@ describe('cloud preview proxy', () => {
     }));
 
     assert.equal(forwardedUrl, 'https://api.worldmonitor.app/api/news/v1/list-feed-digest?variant=full&lang=en');
-    assert.equal(forwardedHeaders?.get('Origin'), null);
-    assert.equal(forwardedHeaders?.get('Referer'), null);
+    assert.equal(forwardedHeaders?.get('Origin'), 'https://worldmonitor.app');
+    assert.equal(forwardedHeaders?.get('Referer'), 'https://worldmonitor.app/');
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://sfc-monitor.vercel.app');
   });
@@ -85,6 +85,56 @@ describe('cloud preview proxy', () => {
     assert.equal(res.status, 200);
     assert.equal(body.data.marketQuotes.quotes[0].symbol, 'AAPL');
     assert.deepEqual(body.data.progressData.countries, []);
+  });
+
+  it('rebuilds prediction markets from bootstrap when upstream RPC requires auth', async () => {
+    const calls = [];
+    globalThis.fetch = async (input, init) => {
+      const url = typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+      calls.push({ url, headers: new Headers(init?.headers) });
+
+      if (url === 'https://api.worldmonitor.app/api/prediction/v1/list-prediction-markets?category=geopolitics&pageSize=10&cursor=') {
+        return new Response(JSON.stringify({ error: 'API key required' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (url === 'https://api.worldmonitor.app/api/bootstrap?tier=fast') {
+        return new Response(JSON.stringify({
+          data: {
+            predictions: {
+              geopolitical: [
+                { title: 'Test market', yesPrice: 62, volume: 120000, url: 'https://polymarket.com/test-market', endDate: '2099-01-01T00:00:00.000Z', source: 'polymarket' },
+              ],
+            },
+          },
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      throw new Error(`Unexpected URL ${url}`);
+    };
+
+    const res = await handler(new Request('https://sfc-monitor.vercel.app/api/cloud/prediction/v1/list-prediction-markets?category=geopolitics&pageSize=10&cursor=', {
+      headers: {
+        Origin: 'https://sfc-monitor.vercel.app',
+      },
+    }));
+
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0]?.headers.get('Origin'), 'https://worldmonitor.app');
+    assert.equal(calls[0]?.headers.get('Referer'), 'https://worldmonitor.app/');
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.markets[0].title, 'Test market');
+    assert.equal(body.markets[0].yesPrice, 0.62);
+    assert.equal(body.markets[0].source, 'MARKET_SOURCE_POLYMARKET');
   });
 
   it('refuses premium market paths through the generic preview proxy', async () => {

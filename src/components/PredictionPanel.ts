@@ -27,7 +27,7 @@ export class PredictionPanel extends Panel {
 
   public renderPredictions(data: PredictionMarket[]): void {
     if (data.length === 0) {
-      this.showError(t('common.failedPredictions'));
+      this.setContent(`<div class="panel-empty">${t('common.noDataAvailable')}</div>`);
       return;
     }
 

@@ -520,6 +520,19 @@ export class App {
       }
     }
 
+    const LIVE_WEBCAMS_RESTORE_KEY = 'worldmonitor-live-webcams-restore-v1';
+    if (!localStorage.getItem(LIVE_WEBCAMS_RESTORE_KEY)) {
+      const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
+      if (variantDefaults.has('live-webcams') && panelSettings['live-webcams'] && !panelSettings['live-webcams']?.enabled) {
+        panelSettings['live-webcams'] = {
+          ...panelSettings['live-webcams'],
+          enabled: true,
+        };
+        saveToStorage(STORAGE_KEYS.panels, panelSettings);
+      }
+      localStorage.setItem(LIVE_WEBCAMS_RESTORE_KEY, 'done');
+    }
+
     // One-time mobile finance migration: enable key maritime/economic layers after the mobile defaults changed.
     const FINANCE_MOBILE_LAYER_DEFAULTS_KEY = 'worldmonitor-finance-mobile-layers-v2';
     if (currentVariant === 'finance' && isMobile && !localStorage.getItem(FINANCE_MOBILE_LAYER_DEFAULTS_KEY)) {
