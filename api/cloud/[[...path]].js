@@ -45,8 +45,6 @@ function isAllowedUpstreamPath(pathname) {
 function buildUpstreamHeaders(req) {
   const headers = new Headers();
   headers.set('Accept', req.headers.get('Accept') || 'application/json');
-  headers.set('Origin', 'https://worldmonitor.app');
-  headers.set('Referer', 'https://worldmonitor.app/');
   headers.set('User-Agent', req.headers.get('User-Agent') || 'worldmonitor-sfc-preview-proxy/1.0');
 
   const forwardedHeaderNames = [
@@ -64,6 +62,69 @@ function buildUpstreamHeaders(req) {
   }
 
   return headers;
+}
+
+async function fetchBootstrapTier(req, tier) {
+  const response = await fetch(`${UPSTREAM_API_BASE}/api/bootstrap?tier=${tier}`, {
+    method: 'GET',
+    headers: buildUpstreamHeaders(req),
+  });
+  if (!response.ok) {
+    throw new Error(`bootstrap ${tier} failed: ${response.status}`);
+  }
+  return {
+    response,
+    json: await response.json(),
+  };
+}
+
+function mergeHeaders(...headerSets) {
+  const merged = new Headers();
+  for (const headerSet of headerSets) {
+    if (!headerSet) continue;
+    for (const [key, value] of headerSet.entries()) {
+      merged.set(key, value);
+    }
+  }
+  return merged;
+}
+
+async function buildBootstrapKeysFallback(req, requestUrl, corsHeaders) {
+  const requestedKeys = (requestUrl.searchParams.get('keys') || '')
+    .split(',')
+    .map((key) => key.trim())
+    .filter(Boolean);
+  if (requestedKeys.length === 0) {
+    return json({ error: 'API key required' }, 401, corsHeaders);
+  }
+
+  const [fast, slow] = await Promise.all([
+    fetchBootstrapTier(req, 'fast'),
+    fetchBootstrapTier(req, 'slow'),
+  ]);
+
+  const mergedData = {
+    ...(fast.json?.data || {}),
+    ...(slow.json?.data || {}),
+  };
+  const data = {};
+  const missing = [];
+  for (const key of requestedKeys) {
+    if (key in mergedData) {
+      data[key] = mergedData[key];
+    } else {
+      missing.push(key);
+    }
+  }
+
+  const headers = mergeHeaders(fast.response.headers, slow.response.headers);
+  for (const [key, value] of Object.entries(corsHeaders)) {
+    headers.set(key, value);
+  }
+  headers.set('Cache-Control', 'no-store');
+  headers.set('CDN-Cache-Control', 'no-store');
+
+  return json({ data, missing }, 200, Object.fromEntries(headers.entries()));
 }
 
 export default async function handler(req) {
@@ -102,6 +163,15 @@ export default async function handler(req) {
     headers: buildUpstreamHeaders(req),
     body: req.method === 'POST' ? await req.text() : undefined,
   });
+
+  if (
+    upstreamResponse.status === 401
+    && upstreamPath === '/api/bootstrap'
+    && requestUrl.searchParams.has('keys')
+    && req.method === 'GET'
+  ) {
+    return buildBootstrapKeysFallback(req, requestUrl, corsHeaders);
+  }
 
   const headers = new Headers(upstreamResponse.headers);
   for (const [key, value] of Object.entries(corsHeaders)) {

@@ -38,10 +38,53 @@ describe('cloud preview proxy', () => {
     }));
 
     assert.equal(forwardedUrl, 'https://api.worldmonitor.app/api/news/v1/list-feed-digest?variant=full&lang=en');
-    assert.equal(forwardedHeaders?.get('Origin'), 'https://worldmonitor.app');
-    assert.equal(forwardedHeaders?.get('Referer'), 'https://worldmonitor.app/');
+    assert.equal(forwardedHeaders?.get('Origin'), null);
+    assert.equal(forwardedHeaders?.get('Referer'), null);
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://sfc-monitor.vercel.app');
+  });
+
+  it('rebuilds bootstrap key requests from fast and slow tier fallbacks when upstream keys path requires auth', async () => {
+    const calls = [];
+    globalThis.fetch = async (input, init) => {
+      const url = typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+      calls.push({ url, headers: new Headers(init?.headers) });
+      if (url === 'https://api.worldmonitor.app/api/bootstrap?keys=progressData,marketQuotes') {
+        return new Response(JSON.stringify({ error: 'API key required' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (url === 'https://api.worldmonitor.app/api/bootstrap?tier=fast') {
+        return new Response(JSON.stringify({ data: { marketQuotes: { quotes: [{ symbol: 'AAPL' }] } } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (url === 'https://api.worldmonitor.app/api/bootstrap?tier=slow') {
+        return new Response(JSON.stringify({ data: { progressData: { countries: [] } } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`Unexpected URL ${url}`);
+    };
+
+    const res = await handler(new Request('https://sfc-monitor.vercel.app/api/cloud/bootstrap?keys=progressData,marketQuotes', {
+      headers: {
+        Origin: 'https://sfc-monitor.vercel.app',
+      },
+    }));
+
+    assert.equal(calls.length, 3);
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.data.marketQuotes.quotes[0].symbol, 'AAPL');
+    assert.deepEqual(body.data.progressData.countries, []);
   });
 
   it('refuses premium market paths through the generic preview proxy', async () => {

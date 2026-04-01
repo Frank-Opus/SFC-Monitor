@@ -26,7 +26,11 @@ describe('market preview proxy', () => {
           : input.url;
       forwardedHeaders = new Headers(init?.headers);
       return new Response(JSON.stringify({
-        tokens: [{ symbol: 'UNI', name: 'Uniswap' }],
+        data: {
+          defiTokens: {
+            tokens: [{ symbol: 'UNI', name: 'Uniswap', price: 12.34, change24h: 1.2, change7d: 3.4 }],
+          },
+        },
       }), {
         status: 200,
         headers: {
@@ -40,20 +44,17 @@ describe('market preview proxy', () => {
       method: 'GET',
       headers: {
         Origin: 'https://sfc-monitor.vercel.app',
-        Authorization: 'Bearer preview-token',
-        'X-WorldMonitor-Key': 'preview-key',
       },
     }));
 
-    assert.equal(forwardedUrl, 'https://api.worldmonitor.app/api/market/v1/list-defi-tokens');
-    assert.equal(forwardedHeaders?.get('Origin'), 'https://worldmonitor.app');
-    assert.equal(forwardedHeaders?.get('Referer'), 'https://worldmonitor.app/');
-    assert.equal(forwardedHeaders?.get('Authorization'), 'Bearer preview-token');
-    assert.equal(forwardedHeaders?.get('X-WorldMonitor-Key'), 'preview-key');
+    assert.equal(forwardedUrl, 'https://api.worldmonitor.app/api/bootstrap?tier=slow');
+    assert.equal(forwardedHeaders?.get('Origin'), null);
+    assert.equal(forwardedHeaders?.get('Referer'), null);
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://sfc-monitor.vercel.app');
-    const body = await res.json() as { tokens: Array<{ symbol: string }> };
+    const body = await res.json() as { tokens: Array<{ symbol: string; change: number }> };
     assert.equal(body.tokens[0]?.symbol, 'UNI');
+    assert.equal(body.tokens[0]?.change, 1.2);
   });
 
   it('rejects disallowed origins before proxying preview requests', async () => {
