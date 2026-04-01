@@ -46,6 +46,8 @@ describe('market preview proxy', () => {
     }));
 
     assert.equal(forwardedUrl, 'https://api.worldmonitor.app/api/market/v1/list-defi-tokens');
+    assert.equal(forwardedHeaders?.get('Origin'), 'https://worldmonitor.app');
+    assert.equal(forwardedHeaders?.get('Referer'), 'https://worldmonitor.app/');
     assert.equal(forwardedHeaders?.get('Authorization'), 'Bearer preview-token');
     assert.equal(forwardedHeaders?.get('X-WorldMonitor-Key'), 'preview-key');
     assert.equal(res.status, 200);

@@ -1,5 +1,6 @@
 import { SITE_VARIANT } from '@/config/variant';
 import { getClerkToken } from '@/services/clerk';
+import { PREMIUM_RPC_PATHS as WEB_PREMIUM_API_PATHS } from '@/shared/premium-paths';
 
 const ENV = (() => {
   try {
@@ -14,6 +15,7 @@ const DEFAULT_WEB_API_URL = 'https://api.worldmonitor.app';
 const KEYED_CLOUD_API_PATTERN = /^\/api\/(?:[^/]+\/v1\/|bootstrap(?:\?|$)|polymarket(?:\?|$)|ais-snapshot(?:\?|$))/;
 const SFC_MONITOR_HOST_PATTERN = /^sfc-monitor(?:-[a-z0-9-]+)*\.vercel\.app$/i;
 const SAME_ORIGIN_MARKET_PROXY_PATTERN = /^\/api\/market\/v1\//;
+const SAME_ORIGIN_CLOUD_PROXY_PATTERN = /^\/api\/(?:[^/]+\/v1\/|bootstrap(?:\?|$)|polymarket(?:\?|$)|ais-snapshot(?:\?|$)|geo(?:\?|$)|gpsjam(?:\?|$)|reverse-geocode(?:\?|$)|satellites(?:\?|$)|youtube\/live(?:\?|$)|opensky(?:\?|$)|military-flights(?:\?|$)|oref-alerts(?:\?|$)|telegram-feed(?:\?|$)|supply-chain\/hormuz-tracker(?:\?|$)|health(?:\?|$)|seed-health(?:\?|$))/;
 
 const DEFAULT_REMOTE_HOSTS: Record<string, string> = {
   tech: WS_API_URL,
@@ -138,6 +140,24 @@ function shouldUseSameOriginMarketProxy(pathWithQuery: string): boolean {
     && SAME_ORIGIN_MARKET_PROXY_PATTERN.test(pathWithQuery);
 }
 
+function shouldUseSameOriginCloudProxy(pathWithQuery: string): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return SFC_MONITOR_HOST_PATTERN.test(window.location?.hostname ?? '')
+    && !shouldUseSameOriginMarketProxy(pathWithQuery)
+    && SAME_ORIGIN_CLOUD_PROXY_PATTERN.test(pathWithQuery);
+}
+
+function toSameOriginCloudProxyPath(pathWithQuery: string): string {
+  if (!pathWithQuery.startsWith('/api/')) {
+    return pathWithQuery;
+  }
+
+  return `/api/cloud${pathWithQuery.slice('/api'.length)}`;
+}
+
 export function getConfiguredWebApiBaseUrl(): string {
   if (WS_API_URL) {
     return normalizeBaseUrl(WS_API_URL);
@@ -202,6 +222,14 @@ export function toApiUrl(path: string): string {
 
   if (isDesktopRuntime()) {
     return toRuntimeUrl(path);
+  }
+
+  if (shouldUseSameOriginMarketProxy(path)) {
+    return path;
+  }
+
+  if (shouldUseSameOriginCloudProxy(path)) {
+    return toSameOriginCloudProxyPath(path);
   }
 
   const webApiBase = getConfiguredWebApiBaseUrl();
@@ -744,9 +772,6 @@ export function installRuntimeFetchPatch(): void {
 
   (window as unknown as Record<string, unknown>).__wmFetchPatched = true;
 }
-
-import { PREMIUM_RPC_PATHS as WEB_PREMIUM_API_PATHS } from '@/shared/premium-paths';
-
 const ALLOWED_REDIRECT_HOSTS = /^https:\/\/([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)*worldmonitor\.app(:\d+)?$/;
 
 function isAllowedRedirectTarget(url: string): boolean {
@@ -769,7 +794,9 @@ export function installWebApiRedirect(): void {
   }
 
   const nativeFetch = window.fetch.bind(window);
-  const shouldRedirectPath = (pathWithQuery: string): boolean => pathWithQuery.startsWith('/api/');
+  const shouldRedirectPath = (pathWithQuery: string): boolean => (
+    pathWithQuery.startsWith('/api/') && !pathWithQuery.startsWith('/api/cloud/')
+  );
 
   /**
    * For premium API paths, inject auth when the user has premium access but no
@@ -844,6 +871,9 @@ export function installWebApiRedirect(): void {
           if (shouldUseSameOriginMarketProxy(input)) {
             return nativeFetch(input, enriched ?? init);
           }
+          if (shouldUseSameOriginCloudProxy(input)) {
+            return fetchWithRedirectFallback(toSameOriginCloudProxyPath(input), input, enriched);
+          }
           // Relative /api/... path — redirect to API base and inject auth.
           return fetchWithRedirectFallback(`${API_BASE}${input}`, input, enriched);
         }
@@ -855,6 +885,9 @@ export function installWebApiRedirect(): void {
           if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
             return fetchWithRedirectFallback(pathAndSearch, input, enriched);
           }
+          if (shouldUseSameOriginCloudProxy(pathAndSearch)) {
+            return fetchWithRedirectFallback(toSameOriginCloudProxyPath(pathAndSearch), input, enriched);
+          }
           return nativeFetch(input, enriched ?? init);
         }
       }
@@ -865,6 +898,9 @@ export function installWebApiRedirect(): void {
           if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
             return nativeFetch(input, enriched ?? init);
           }
+          if (shouldUseSameOriginCloudProxy(pathAndSearch)) {
+            return fetchWithRedirectFallback(new URL(toSameOriginCloudProxyPath(pathAndSearch), window.location.origin), input, enriched);
+          }
           return fetchWithRedirectFallback(new URL(`${API_BASE}${pathAndSearch}`), input, enriched);
         }
         // URL object already targeting the API base.
@@ -872,6 +908,9 @@ export function installWebApiRedirect(): void {
           const enriched = await enrichInitForPremium(pathAndSearch, init);
           if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
             return fetchWithRedirectFallback(new URL(pathAndSearch, window.location.origin), input, enriched);
+          }
+          if (shouldUseSameOriginCloudProxy(pathAndSearch)) {
+            return fetchWithRedirectFallback(new URL(toSameOriginCloudProxyPath(pathAndSearch), window.location.origin), input, enriched);
           }
           return nativeFetch(input, enriched ?? init);
         }
@@ -885,6 +924,10 @@ export function installWebApiRedirect(): void {
             if (enriched) return nativeFetch(new Request(input, enriched));
             return nativeFetch(input, init);
           }
+          if (shouldUseSameOriginCloudProxy(pathAndSearch)) {
+            const sameOriginCloudRequest = new Request(new URL(toSameOriginCloudProxyPath(pathAndSearch), window.location.origin), input);
+            return fetchWithRedirectFallback(sameOriginCloudRequest, input.clone(), enriched);
+          }
           return fetchWithRedirectFallback(
             new Request(`${API_BASE}${pathAndSearch}`, input),
             input.clone(),
@@ -897,6 +940,10 @@ export function installWebApiRedirect(): void {
           if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
             const sameOriginRequest = new Request(new URL(pathAndSearch, window.location.origin), input);
             return fetchWithRedirectFallback(sameOriginRequest, input.clone(), enriched);
+          }
+          if (shouldUseSameOriginCloudProxy(pathAndSearch)) {
+            const sameOriginCloudRequest = new Request(new URL(toSameOriginCloudProxyPath(pathAndSearch), window.location.origin), input);
+            return fetchWithRedirectFallback(sameOriginCloudRequest, input.clone(), enriched);
           }
           if (enriched) return nativeFetch(new Request(input, enriched));
         }

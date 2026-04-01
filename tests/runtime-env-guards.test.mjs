@@ -33,6 +33,11 @@ describe('runtime env guards', () => {
     assert.ok(runtimeSrc.includes("const SAME_ORIGIN_MARKET_PROXY_PATTERN = /^\\/api\\/market\\/v1\\//;"), 'Expected same-origin market proxy pattern');
     assert.ok(runtimeSrc.includes('function shouldUseSameOriginMarketProxy(pathWithQuery: string): boolean {'), 'Expected same-origin market proxy helper');
   });
+
+  it('routes broader sfc-monitor cloud reads through the same-origin /api/cloud proxy', () => {
+    assert.ok(runtimeSrc.includes("const SAME_ORIGIN_CLOUD_PROXY_PATTERN = /^\\/api\\/(?:[^/]+\\/v1\\/|bootstrap(?:\\?|$)|polymarket(?:\\?|$)|ais-snapshot(?:\\?|$)|geo(?:\\?|$)|gpsjam(?:\\?|$)|reverse-geocode(?:\\?|$)|satellites(?:\\?|$)|youtube\\/live(?:\\?|$)|opensky(?:\\?|$)|military-flights(?:\\?|$)|oref-alerts(?:\\?|$)|telegram-feed(?:\\?|$)|supply-chain\\/hormuz-tracker(?:\\?|$)|health(?:\\?|$)|seed-health(?:\\?|$))/;"), 'Expected same-origin cloud proxy path pattern');
+    assert.ok(runtimeSrc.includes("return `/api/cloud${pathWithQuery.slice('/api'.length)}`;"), 'Expected /api/cloud path rewrite helper');
+  });
 });
 
 describe('variant env guards', () => {

@@ -21,6 +21,8 @@ function shouldProxyPreviewMarketRequest(req: Request): boolean {
 function buildProxyHeaders(req: Request): Headers {
   const headers = new Headers();
   headers.set('Accept', req.headers.get('Accept') ?? 'application/json');
+  headers.set('Origin', 'https://worldmonitor.app');
+  headers.set('Referer', 'https://worldmonitor.app/');
   headers.set('User-Agent', req.headers.get('User-Agent') ?? 'worldmonitor-preview-market-proxy/1.0');
 
   const forwardedHeaderNames = [
