@@ -20,7 +20,21 @@ describe('panel regression recovery', () => {
     assert.ok(dataLoaderSrc.includes("this.ctx.panels['satellite-imagery']"), 'Expected data loader to update the satellite imagery panel');
   });
 
+  it('keeps live webcams and SFC-Agent AI panels promoted in the layout defaults', () => {
+    assert.ok(fullVariantSrc.includes("'live-webcams': { name: 'Live Webcams', enabled: true, priority: 1 }"), 'Expected full variant defaults to include live webcams');
+    assert.ok(fullVariantSrc.includes("insights: { name: 'SFC-Agent AI Insights', enabled: true, priority: 1 }"), 'Expected full variant defaults to include SFC-Agent AI insights');
+    assert.ok(panelLayoutSrc.includes("const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', 'insights', 'strategic-posture', 'forecast', 'polymarket'] as const;"), 'Expected spotlight panel promotion set in layout manager');
+    assert.ok(panelLayoutSrc.includes("allOrder = promotePanelsAfterAnchor(allOrder, 'live-news', SFC_AGENT_SPOTLIGHT_PANELS);"), 'Expected unsaved layout defaults to promote live webcams and AI panels');
+  });
+
   it('keeps finance market panel category entries for the premium analysis panels', () => {
     assert.ok(panelsSrc.includes("panelKeys: ['markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'market-implications', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket']"), 'Expected finance markets category to include premium market panels');
+  });
+
+  it('keeps SFC-Agent spotlight panels branded and promoted in the default layout', () => {
+    assert.ok(panelLayoutSrc.includes("const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', 'insights', 'strategic-posture', 'forecast', 'polymarket'] as const;"), 'Expected spotlight panel set in layout manager');
+    assert.ok(panelLayoutSrc.includes("allOrder = promotePanelsAfterAnchor(allOrder, 'live-news', SFC_AGENT_SPOTLIGHT_PANELS);"), 'Expected layout manager to keep spotlight panels near the top');
+    assert.ok(panelsSrc.includes("insights: { name: 'SFC-Agent AI Insights', enabled: true, priority: 1 }"), 'Expected SFC-Agent AI Insights in registry');
+    assert.ok(panelsSrc.includes("polymarket: { name: 'SFC-Agent AI Predictions', enabled: true, priority: 1 }"), 'Expected SFC-Agent AI Predictions in registry');
   });
 });

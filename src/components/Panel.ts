@@ -260,10 +260,11 @@ export class Panel {
 
     if (options.className?.includes('panel-ai-focus') || options.className?.includes('panel-ai-linked')) {
       const isPrimaryAi = options.className.includes('panel-ai-focus');
+      const isSpotlightAi = options.className.includes('panel-ai-spotlight');
       const aiBadge = h(
         'span',
-        { className: `panel-ai-badge${isPrimaryAi ? '' : ' panel-ai-badge-linked'}` },
-        isPrimaryAi ? 'AI' : 'AI+',
+        { className: `panel-ai-badge${isPrimaryAi ? '' : ' panel-ai-badge-linked'}${isSpotlightAi ? ' panel-ai-badge-spotlight' : ''}` },
+        isSpotlightAi ? 'SFC AI' : isPrimaryAi ? 'AI' : 'AI+',
       );
       headerLeft.appendChild(aiBadge);
     }

@@ -34,7 +34,7 @@ export class InsightsPanel extends Panel {
     super({
       id: 'insights',
       title: t('panels.insights'),
-      className: 'panel-ai-focus',
+      className: 'panel-ai-focus panel-ai-spotlight',
       showCount: false,
       infoTooltip: t('components.insights.infoTooltip'),
     });

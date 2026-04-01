@@ -76,7 +76,8 @@ import type { CorrelationPanel } from '@/components/CorrelationPanel';
 
 const CYBER_LAYER_ENABLED = import.meta.env.VITE_ENABLE_CYBER_LAYER === 'true';
 const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
-const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', 'live-webcams', ...AI_SPOTLIGHT_PANELS] as const;
+const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', ...AI_SPOTLIGHT_PANELS] as const;
+const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS] as const;
 
 function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
   const promoted = promotedPanels.filter((key) => order.includes(key));
@@ -591,6 +592,49 @@ export class App {
       }
 
       localStorage.setItem(AI_SPOTLIGHT_RESTORE_KEY, 'done');
+    }
+
+    const SFC_AGENT_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-sfc-agent-spotlight-v1';
+    if (!localStorage.getItem(SFC_AGENT_SPOTLIGHT_RESTORE_KEY)) {
+      const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
+      const restorablePanels = SFC_AGENT_SPOTLIGHT_PANELS.filter((key) => variantDefaults.has(key));
+      let changed = false;
+
+      for (const key of restorablePanels) {
+        if (!panelSettings[key]) {
+          panelSettings[key] = {
+            ...getEffectivePanelConfig(key, SITE_VARIANT),
+            enabled: true,
+          };
+          changed = true;
+          continue;
+        }
+
+        if (panelSettings[key]?.enabled) continue;
+        panelSettings[key] = {
+          ...panelSettings[key],
+          enabled: true,
+        };
+        changed = true;
+      }
+
+      if (changed) saveToStorage(STORAGE_KEYS.panels, panelSettings);
+
+      const savedOrder = localStorage.getItem(PANEL_ORDER_KEY);
+      if (savedOrder) {
+        try {
+          const order: string[] = JSON.parse(savedOrder);
+          const nextOrder = promotePanelsAfterAnchor(order, 'live-news', restorablePanels);
+          if (JSON.stringify(nextOrder) !== JSON.stringify(order)) {
+            localStorage.setItem(PANEL_ORDER_KEY, JSON.stringify(nextOrder));
+            console.log('[App] Restored SFC-Agent spotlight panels near the top of the layout');
+          }
+        } catch {
+          // Invalid saved order, ignore and keep defaults.
+        }
+      }
+
+      localStorage.setItem(SFC_AGENT_SPOTLIGHT_RESTORE_KEY, 'done');
     }
 
     // One-time mobile finance migration: enable key maritime/economic layers after the mobile defaults changed.

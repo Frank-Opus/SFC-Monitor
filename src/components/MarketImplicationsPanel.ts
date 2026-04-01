@@ -49,8 +49,8 @@ export class MarketImplicationsPanel extends Panel {
   constructor() {
     super({
       id: 'market-implications',
-      title: 'AI Market Implications',
-      className: 'panel-ai-linked',
+      title: t('panels.marketImplications'),
+      className: 'panel-ai-linked panel-ai-spotlight',
       infoTooltip: t('components.marketImplications.infoTooltip'),
       premium: 'locked',
     });

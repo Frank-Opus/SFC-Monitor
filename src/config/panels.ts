@@ -11,15 +11,15 @@ const _desktop = isDesktopRuntime();
 // FULL VARIANT (Geopolitical)
 // ============================================
 // Panel order matters! First panels appear at top of grid.
-// Desired order: live-news, AI Insights, AI Strategic Posture, cii, strategic-risk, then rest
+// Desired order: live-news, SFC-Agent AI panels, cii, strategic-risk, then rest
 const FULL_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Global Map', enabled: true, priority: 1 },
   'live-news': { name: 'Live News', enabled: true, priority: 1 },
   'live-webcams': { name: 'Live Webcams', enabled: true, priority: 1 },
   'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
-  insights: { name: 'AI Insights', enabled: true, priority: 1 },
-  'strategic-posture': { name: 'AI Strategic Posture', enabled: true, priority: 1 },
-  forecast: { name: 'AI Forecasts', enabled: true, priority: 1, ...(_desktop && { premium: 'locked' as const }) }, // trial: unlocked on web, locked on desktop
+  insights: { name: 'SFC-Agent AI Insights', enabled: true, priority: 1 },
+  'strategic-posture': { name: 'SFC-Agent AI Strategic Posture', enabled: true, priority: 1 },
+  forecast: { name: 'SFC-Agent AI Forecasts', enabled: true, priority: 1, ...(_desktop && { premium: 'locked' as const }) }, // trial: unlocked on web, locked on desktop
   cii: { name: 'Country Instability', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
   'strategic-risk': { name: 'Strategic Risk Overview', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
   intel: { name: 'Intel Feed', enabled: true, priority: 1 },
@@ -39,7 +39,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   energy: { name: 'Energy & Resources', enabled: true, priority: 1 },
   gov: { name: 'Government', enabled: true, priority: 1 },
   thinktanks: { name: 'Think Tanks', enabled: true, priority: 1 },
-  polymarket: { name: 'Predictions', enabled: true, priority: 1 },
+  polymarket: { name: 'SFC-Agent AI Predictions', enabled: true, priority: 1 },
   commodities: { name: 'Metals & Materials', enabled: true, priority: 1 },
   'energy-complex': { name: 'Energy Complex', enabled: true, priority: 1 },
   markets: { name: 'Markets', enabled: true, priority: 1 },
@@ -91,7 +91,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   'national-debt': { name: 'Global Debt Clock', enabled: true, priority: 2 },
   'cross-source-signals': { name: 'Cross-Source Signals', enabled: true, priority: 2 },
-  'market-implications': { name: 'AI Market Implications', enabled: true, priority: 1, premium: 'locked' as const },
+  'market-implications': { name: 'SFC-Agent AI Market Implications', enabled: true, priority: 1, premium: 'locked' as const },
 };
 
 const FULL_MAP_LAYERS: MapLayers = {
@@ -226,7 +226,7 @@ const TECH_PANELS: Record<string, PanelConfig> = {
   'live-news': { name: 'Tech Headlines', enabled: true, priority: 1 },
   'live-webcams': { name: 'Live Webcams', enabled: true, priority: 2 },
   'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
-  insights: { name: 'AI Insights', enabled: true, priority: 1 },
+  insights: { name: 'SFC-Agent AI Insights', enabled: true, priority: 1 },
   ai: { name: 'AI/ML News', enabled: true, priority: 1 },
   tech: { name: 'Technology', enabled: true, priority: 1 },
   startups: { name: 'Startups & VC', enabled: true, priority: 1 },
@@ -246,7 +246,7 @@ const TECH_PANELS: Record<string, PanelConfig> = {
   dev: { name: 'Developer Community', enabled: true, priority: 2 },
   github: { name: 'GitHub Trending', enabled: true, priority: 1 },
   ipo: { name: 'IPO & SPAC', enabled: true, priority: 2 },
-  polymarket: { name: 'Tech Predictions', enabled: true, priority: 2 },
+  polymarket: { name: 'SFC-Agent AI Tech Predictions', enabled: true, priority: 2 },
   funding: { name: 'Funding & VC', enabled: true, priority: 1 },
   producthunt: { name: 'Product Hunt', enabled: true, priority: 1 },
   events: { name: 'Tech Events', enabled: true, priority: 1 },
@@ -392,7 +392,7 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'live-news': { name: 'Market Headlines', enabled: true, priority: 1 },
   'live-webcams': { name: 'Live Webcams', enabled: true, priority: 2 },
   'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
-  insights: { name: 'AI Market Insights', enabled: true, priority: 1 },
+  insights: { name: 'SFC-Agent AI Market Insights', enabled: true, priority: 1 },
   markets: { name: 'Live Markets', enabled: true, priority: 1 },
   'stock-analysis': { name: 'Premium Stock Analysis', enabled: true, priority: 1, premium: 'locked' },
   'stock-backtest': { name: 'Premium Backtesting', enabled: true, priority: 1, premium: 'locked' },
@@ -436,7 +436,7 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   gccNews: { name: 'GCC Business News', enabled: true, priority: 2 },
   'gulf-economies': { name: 'Gulf Economies', enabled: true, priority: 1 },
   'consumer-prices': { name: 'Consumer Prices', enabled: true, priority: 1 },
-  polymarket: { name: 'Predictions', enabled: true, priority: 2 },
+  polymarket: { name: 'SFC-Agent AI Predictions', enabled: true, priority: 2 },
   'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
@@ -708,7 +708,7 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
 const COMMODITY_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Commodity Map', enabled: true, priority: 1 },
   'live-news': { name: 'Commodity Headlines', enabled: true, priority: 1 },
-  insights: { name: 'AI Commodity Insights', enabled: true, priority: 1 },
+  insights: { name: 'SFC-Agent AI Commodity Insights', enabled: true, priority: 1 },
   'commodity-news': { name: 'Commodity News', enabled: true, priority: 1 },
   'gold-silver': { name: 'Gold & Silver', enabled: true, priority: 1 },
   energy: { name: 'Energy Markets', enabled: true, priority: 1 },
@@ -730,7 +730,7 @@ const COMMODITY_PANELS: Record<string, PanelConfig> = {
   'gcc-investments': { name: 'GCC Resource Investments', enabled: true, priority: 2 },
   'consumer-prices': { name: 'Consumer Prices', enabled: true, priority: 2 },
   'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
-  polymarket: { name: 'Commodity Predictions', enabled: true, priority: 2 },
+  polymarket: { name: 'SFC-Agent AI Commodity Predictions', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
 };
@@ -887,17 +887,17 @@ export const VARIANT_PANEL_OVERRIDES: Partial<Record<string, Partial<Record<stri
   finance: {
     map:         { name: 'Global Markets Map' },
     'live-news': { name: 'Market Headlines' },
-    insights:    { name: 'AI Market Insights' },
+    insights:    { name: 'SFC-Agent AI Market Insights' },
   },
   tech: {
     map:         { name: 'Global Tech Map' },
     'live-news': { name: 'Tech Headlines' },
-    insights:    { name: 'AI Insights' },
+    insights:    { name: 'SFC-Agent AI Insights' },
   },
   commodity: {
     map:         { name: 'Commodity Map' },
     'live-news': { name: 'Commodity Headlines' },
-    insights:    { name: 'AI Commodity Insights' },
+    insights:    { name: 'SFC-Agent AI Commodity Insights' },
   },
   happy: {
     map:         { name: 'World Map' },

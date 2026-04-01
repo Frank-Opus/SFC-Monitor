@@ -1510,6 +1510,12 @@ body.panel-resize-active iframe {
   box-shadow: none;
 }
 
+.panel-ai-badge-spotlight {
+  color: #03111d;
+  background: linear-gradient(135deg, #7dd3fc 0%, #67e8f9 48%, #fde68a 100%);
+  box-shadow: 0 0 22px rgba(125, 211, 252, 0.32);
+}
+
 .panel-ai-focus,
 .panel-ai-linked {
   position: relative;
@@ -1542,15 +1548,45 @@ body.panel-resize-active iframe {
   background: linear-gradient(90deg, rgba(94, 234, 212, 0.7) 0%, rgba(96, 165, 250, 0.8) 100%);
 }
 
+.panel-ai-spotlight {
+  border-color: rgba(125, 211, 252, 0.48);
+  box-shadow:
+    0 18px 38px rgba(4, 12, 26, 0.34),
+    0 0 0 1px rgba(125, 211, 252, 0.16),
+    0 0 28px rgba(103, 232, 249, 0.1);
+}
+
+.panel-ai-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top right, rgba(125, 211, 252, 0.16), transparent 38%),
+    radial-gradient(circle at bottom left, rgba(253, 230, 138, 0.08), transparent 34%);
+  opacity: 0.95;
+}
+
 .panel-ai-focus .panel-header {
   background:
     linear-gradient(90deg, rgba(94, 234, 212, 0.08) 0%, rgba(96, 165, 250, 0.12) 55%, rgba(192, 132, 252, 0.08) 100%),
     var(--overlay-subtle);
 }
 
+.panel-ai-spotlight .panel-header {
+  background:
+    linear-gradient(90deg, rgba(125, 211, 252, 0.16) 0%, rgba(103, 232, 249, 0.14) 46%, rgba(253, 230, 138, 0.12) 100%),
+    var(--overlay-subtle);
+}
+
 .panel-ai-focus .panel-title,
 .panel-ai-linked .panel-title {
   color: #e8f4ff;
+}
+
+.panel-ai-spotlight .panel-title {
+  color: #f5fbff;
+  letter-spacing: 0.01em;
 }
 
 /* Push the first element after header-left to the right; subsequent siblings flow via gap */

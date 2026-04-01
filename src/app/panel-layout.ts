@@ -97,6 +97,27 @@ import { PanelGateReason, getPanelGateReason, hasPremiumAccess } from '@/service
 import type { Panel } from '@/components/Panel';
 
 /** Panels that require premium access on web. Auth-based gating applies to these. */
+const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', 'insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
+
+function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
+  const promoted = promotedPanels.filter((key) => order.includes(key));
+  if (promoted.length === 0) return order;
+
+  const promotedSet = new Set(promoted);
+  const filtered = order.filter((key) => !promotedSet.has(key));
+  const anchorIndex = filtered.indexOf(anchor);
+
+  if (anchorIndex === -1) {
+    return [...promoted, ...filtered];
+  }
+
+  return [
+    ...filtered.slice(0, anchorIndex + 1),
+    ...promoted,
+    ...filtered.slice(anchorIndex + 1),
+  ];
+}
+
 const WEB_PREMIUM_PANELS = new Set([
   'stock-analysis',
   'stock-backtest',
@@ -1077,6 +1098,8 @@ export class PanelLayoutManager implements AppModule {
           const afterNews = allOrder.indexOf('live-news') + 1;
           allOrder.splice(afterNews, 0, 'live-webcams');
         }
+
+        allOrder = promotePanelsAfterAnchor(allOrder, 'live-news', SFC_AGENT_SPOTLIGHT_PANELS);
       }
 
       if (this.ctx.isDesktopApp) {

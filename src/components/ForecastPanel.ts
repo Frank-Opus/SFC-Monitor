@@ -198,7 +198,7 @@ export class ForecastPanel extends Panel {
   private expandedTheaterId: string | null = null;
 
   constructor() {
-    super({ id: 'forecast', title: 'AI Forecasts', className: 'panel-ai-focus', showCount: true, infoTooltip: t('components.forecast.infoTooltip') });
+    super({ id: 'forecast', title: t('panels.forecast'), className: 'panel-ai-focus panel-ai-spotlight', showCount: true, infoTooltip: t('components.forecast.infoTooltip') });
     injectStyles();
     this.content.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
