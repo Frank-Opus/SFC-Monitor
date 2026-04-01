@@ -1477,6 +1477,8 @@ body.panel-resize-active iframe {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .panel-title {
@@ -1485,6 +1487,10 @@ body.panel-resize-active iframe {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .panel-ai-badge {
@@ -19671,6 +19677,18 @@ body.has-breaking-alert .panels-grid {
     height: 100% !important;
   }
 
+  .map-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 4px;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    flex: 0 0 min(36vh, 380px);
+    min-height: min(28vh, 280px);
+    overflow: hidden;
+  }
+
   .map-container-smooth {
     transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
@@ -19682,6 +19700,18 @@ body.has-breaking-alert .panels-grid {
   .map-bottom-grid:empty {
     border-top: none;
     padding: 0;
+    min-height: 0;
+    flex-basis: 0;
+  }
+
+  .map-bottom-grid .panel {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+  }
+
+  .map-bottom-grid .panel[data-panel="live-webcams"] {
+    min-height: 100%;
   }
 
   .map-resize-handle {
@@ -19715,6 +19745,24 @@ body.has-breaking-alert .panels-grid {
     grid-auto-rows: minmax(200px, 380px);
     align-content: start;
     overflow-y: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .panel-header-left {
+    gap: 6px;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 0.4px;
+  }
+
+  .panel-ai-badge,
+  .panel-ai-badge-spotlight {
+    min-width: 0;
+    padding: 2px 5px;
+    font-size: 7px;
   }
 }
 

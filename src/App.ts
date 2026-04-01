@@ -77,6 +77,7 @@ import type { CorrelationPanel } from '@/components/CorrelationPanel';
 const CYBER_LAYER_ENABLED = import.meta.env.VITE_ENABLE_CYBER_LAYER === 'true';
 const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
 const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', ...AI_SPOTLIGHT_PANELS] as const;
+const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;
 const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS] as const;
 
 function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
@@ -635,6 +636,19 @@ export class App {
       }
 
       localStorage.setItem(SFC_AGENT_SPOTLIGHT_RESTORE_KEY, 'done');
+    }
+
+    const ULTRAWIDE_WEBCAM_LAYOUT_KEY = 'worldmonitor-ultrawide-webcams-v1';
+    if (!localStorage.getItem(ULTRAWIDE_WEBCAM_LAYOUT_KEY)) {
+      const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
+      if (variantDefaults.has('live-webcams')) {
+        localStorage.setItem(
+          PANEL_ORDER_KEY + '-bottom-set',
+          JSON.stringify([...ULTRAWIDE_WEBCAM_BOTTOM_PANELS]),
+        );
+        localStorage.removeItem(PANEL_ORDER_KEY + '-bottom');
+      }
+      localStorage.setItem(ULTRAWIDE_WEBCAM_LAYOUT_KEY, 'done');
     }
 
     // One-time mobile finance migration: enable key maritime/economic layers after the mobile defaults changed.

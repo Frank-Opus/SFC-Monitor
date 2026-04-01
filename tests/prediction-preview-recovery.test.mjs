@@ -34,8 +34,10 @@ describe('prediction preview recovery guards', () => {
     assert.ok(appSrc.includes("const AI_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-ai-spotlight-restore-v1';"), 'Expected AI spotlight restore migration key');
     assert.ok(appSrc.includes("const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;"), 'Expected AI spotlight panel set');
     assert.ok(appSrc.includes("const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', ...AI_SPOTLIGHT_PANELS] as const;"), 'Expected SFC spotlight panel set');
+    assert.ok(appSrc.includes("const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;"), 'Expected ultrawide webcam-only bottom panel set');
     assert.ok(appSrc.includes("const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS] as const;"), 'Expected free-tier priority ordering to preserve AI panels');
     assert.ok(appSrc.includes("promotePanelsAfterAnchor(order, 'live-news', restorablePanels)"), 'Expected AI panel order promotion near the top of the layout');
     assert.ok(appSrc.includes("const SFC_AGENT_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-sfc-agent-spotlight-v1';"), 'Expected new SFC spotlight migration key for existing saved layouts');
+    assert.ok(appSrc.includes("const ULTRAWIDE_WEBCAM_LAYOUT_KEY = 'worldmonitor-ultrawide-webcams-v1';"), 'Expected ultrawide webcam layout migration key');
   });
 });

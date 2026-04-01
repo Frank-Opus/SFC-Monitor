@@ -10,6 +10,7 @@ const fullVariantSrc = readFileSync(resolve(__dirname, '../src/config/variants/f
 const panelLayoutSrc = readFileSync(resolve(__dirname, '../src/app/panel-layout.ts'), 'utf-8');
 const dataLoaderSrc = readFileSync(resolve(__dirname, '../src/app/data-loader.ts'), 'utf-8');
 const componentIndexSrc = readFileSync(resolve(__dirname, '../src/components/index.ts'), 'utf-8');
+const zhLocaleSrc = readFileSync(resolve(__dirname, '../src/locales/zh.json'), 'utf-8');
 
 describe('panel regression recovery', () => {
   it('restores the deleted satellite imagery panel wiring', () => {
@@ -33,8 +34,17 @@ describe('panel regression recovery', () => {
 
   it('keeps SFC-Agent spotlight panels branded and promoted in the default layout', () => {
     assert.ok(panelLayoutSrc.includes("const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', 'insights', 'strategic-posture', 'forecast', 'polymarket'] as const;"), 'Expected spotlight panel set in layout manager');
+    assert.ok(panelLayoutSrc.includes("const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;"), 'Expected webcam-only ultrawide bottom set in layout manager');
     assert.ok(panelLayoutSrc.includes("allOrder = promotePanelsAfterAnchor(allOrder, 'live-news', SFC_AGENT_SPOTLIGHT_PANELS);"), 'Expected layout manager to keep spotlight panels near the top');
+    assert.ok(panelLayoutSrc.includes("return new Set(ULTRAWIDE_WEBCAM_BOTTOM_PANELS);"), 'Expected fresh layouts to place only live webcams in the map bottom zone');
     assert.ok(panelsSrc.includes("insights: { name: 'SFC-Agent AI Insights', enabled: true, priority: 1 }"), 'Expected SFC-Agent AI Insights in registry');
     assert.ok(panelsSrc.includes("polymarket: { name: 'SFC-Agent AI Predictions', enabled: true, priority: 1 }"), 'Expected SFC-Agent AI Predictions in registry');
+  });
+
+  it('keeps Chinese AI panel titles branded with the SFC-Agent prefix', () => {
+    assert.ok(zhLocaleSrc.includes('"insights": "SFC-Agent AI洞察"'), 'Expected Chinese insights title to include SFC-Agent prefix');
+    assert.ok(zhLocaleSrc.includes('"strategicPosture": "SFC-Agent AI战略态势"'), 'Expected Chinese strategic posture title to include SFC-Agent prefix');
+    assert.ok(zhLocaleSrc.includes('"polymarket": "SFC-Agent AI预测"'), 'Expected Chinese predictions title to include SFC-Agent prefix');
+    assert.ok(zhLocaleSrc.includes('"forecast": "SFC-Agent AI预测研判"'), 'Expected Chinese forecast title to include SFC-Agent prefix');
   });
 });

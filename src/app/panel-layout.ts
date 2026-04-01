@@ -98,6 +98,7 @@ import type { Panel } from '@/components/Panel';
 
 /** Panels that require premium access on web. Auth-based gating applies to these. */
 const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', 'insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
+const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;
 
 function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
   const promoted = promotedPanels.filter((key) => order.includes(key));
@@ -1478,6 +1479,10 @@ export class PanelLayoutManager implements AppModule {
         }
       }
     } catch { /* ignore */ }
+    const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
+    if (variantDefaults.has('live-webcams')) {
+      return new Set(ULTRAWIDE_WEBCAM_BOTTOM_PANELS);
+    }
     return new Set();
   }
 
