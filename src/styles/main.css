@@ -420,16 +420,6 @@ canvas,
   white-space: nowrap;
 }
 
-.version {
-  font-size: 9px;
-  color: var(--muted);
-  opacity: 0.5;
-  margin-left: 6px;
-  font-weight: normal;
-  letter-spacing: 0.5px;
-  vertical-align: middle;
-}
-
 /* Update toast notification */
 .update-toast {
   position: fixed;
@@ -11889,12 +11879,6 @@ a.prediction-link:hover {
   color: var(--green);
 }
 
-.mobile-menu-version {
-  padding: 4px 20px 16px;
-  font-size: 11px;
-  color: var(--text-ghost);
-}
-
 .region-sheet-backdrop {
   position: fixed;
   inset: 0;
@@ -12008,7 +11992,6 @@ a.prediction-link:hover {
   }
 
   .variant-switcher,
-  .version,
   .beta-badge,
   .credit-link,
   .github-link,
