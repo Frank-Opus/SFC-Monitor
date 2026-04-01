@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VITE_HOST="${VITE_HOST:-localhost}"
 VITE_PORT="${VITE_PORT:-5173}"
+RELAY_HOST="${RELAY_HOST:-127.0.0.1}"
+RELAY_PORT="${RELAY_PORT:-3004}"
 
 find_node_bin() {
   if command -v node >/dev/null 2>&1; then
@@ -40,6 +42,59 @@ NODE_BIN="${WM_NODE_BIN:-$(find_node_bin)}"
 export PATH="$(dirname "$NODE_BIN"):$HOME/.npm-global/bin:$PATH"
 
 cd "$ROOT_DIR"
+
+if [[ -f "$ROOT_DIR/.env.local" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT_DIR/.env.local"
+  set +a
+fi
+
+: "${WS_RELAY_URL:=http://${RELAY_HOST}:${RELAY_PORT}}"
+: "${VITE_WS_RELAY_URL:=ws://${RELAY_HOST}:${RELAY_PORT}}"
+: "${VITE_OPENSKY_RELAY_URL:=http://${RELAY_HOST}:${RELAY_PORT}}"
+
+relay_is_healthy() {
+  if ! command -v curl >/dev/null 2>&1; then
+    return 1
+  fi
+  curl -fsS "http://${RELAY_HOST}:${RELAY_PORT}/health" >/dev/null 2>&1
+}
+
+RELAY_PID=""
+cleanup() {
+  if [[ -n "$RELAY_PID" ]] && kill -0 "$RELAY_PID" >/dev/null 2>&1; then
+    kill "$RELAY_PID" >/dev/null 2>&1 || true
+    wait "$RELAY_PID" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT INT TERM
+
+if [[ "${WM_START_RELAY:-1}" != "0" && -n "${AISSTREAM_API_KEY:-}" ]]; then
+  if relay_is_healthy; then
+    printf 'Relay already running: http://%s:%s\n\n' "$RELAY_HOST" "$RELAY_PORT"
+  else
+    printf 'Starting local relay: http://%s:%s\n' "$RELAY_HOST" "$RELAY_PORT"
+    "$NODE_BIN" scripts/ais-relay.cjs >"$ROOT_DIR/.worldmonitor-relay.log" 2>&1 &
+    RELAY_PID=$!
+
+    for _ in $(seq 1 20); do
+      if relay_is_healthy; then
+        printf 'Relay ready.\n\n'
+        break
+      fi
+      sleep 1
+    done
+
+    if ! relay_is_healthy; then
+      echo "Relay failed to become healthy. Recent log output:" >&2
+      tail -n 40 "$ROOT_DIR/.worldmonitor-relay.log" >&2 || true
+      exit 1
+    fi
+  fi
+else
+  printf 'Relay autostart skipped. Set AISSTREAM_API_KEY and leave WM_START_RELAY=1 to enable it.\n\n'
+fi
 
 printf 'World Monitor web UI: http://%s:%s\n\n' "$VITE_HOST" "$VITE_PORT"
 printf 'Using node: %s\n\n' "$NODE_BIN"
