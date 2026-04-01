@@ -7,7 +7,7 @@ let handler;
 
 describe('cloud preview proxy', () => {
   beforeEach(async () => {
-    const mod = await import(`../api/cloud/[...path].js?t=${Date.now()}`);
+    const mod = await import(`../api/cloud-proxy.js?t=${Date.now()}`);
     handler = mod.default;
   });
 
@@ -44,6 +44,30 @@ describe('cloud preview proxy', () => {
     assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://sfc-monitor.vercel.app');
   });
 
+  it('accepts rewritten query-path entrypoints for nested cloud RPC paths', async () => {
+    let forwardedUrl = '';
+    globalThis.fetch = async (input) => {
+      forwardedUrl = typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const res = await handler(new Request('https://sfc-monitor.vercel.app/api/cloud-proxy?path=prediction/v1/list-prediction-markets&category=geopolitics&page_size=5&cursor=', {
+      headers: {
+        Origin: 'https://sfc-monitor.vercel.app',
+      },
+    }));
+
+    assert.equal(forwardedUrl, 'https://api.worldmonitor.app/api/prediction/v1/list-prediction-markets?category=geopolitics&page_size=5&cursor=');
+    assert.equal(res.status, 200);
+  });
+
   it('rebuilds bootstrap key requests from fast and slow tier fallbacks when upstream keys path requires auth', async () => {
     const calls = [];
     globalThis.fetch = async (input, init) => {
@@ -53,7 +77,7 @@ describe('cloud preview proxy', () => {
           ? input.toString()
           : input.url;
       calls.push({ url, headers: new Headers(init?.headers) });
-      if (url === 'https://api.worldmonitor.app/api/bootstrap?keys=progressData,marketQuotes') {
+      if (url === 'https://api.worldmonitor.app/api/bootstrap?keys=progressData%2CmarketQuotes') {
         return new Response(JSON.stringify({ error: 'API key required' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },

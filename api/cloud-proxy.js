@@ -1,9 +1,8 @@
-import { getCorsHeaders, isDisallowedOrigin } from '../_cors.js';
+import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 
 export const config = { runtime: 'edge' };
 
 const UPSTREAM_API_BASE = 'https://api.worldmonitor.app';
-const PROXY_PREFIX = '/api/cloud';
 const SFC_MONITOR_HOST_PATTERN = /^sfc-monitor(?:-[a-z0-9-]+)*\.vercel\.app$/i;
 const ALLOWED_PROXY_PATH_PATTERN = /^\/api\/(?:[^/]+\/v1\/[^/]+|bootstrap|polymarket|ais-snapshot|geo|gpsjam|reverse-geocode|satellites|youtube\/live|opensky|military-flights|oref-alerts|telegram-feed|supply-chain\/hormuz-tracker|health|seed-health)$/;
 const PREMIUM_RPC_PATHS = new Set([
@@ -26,11 +25,16 @@ function json(body, status, headers = {}) {
 }
 
 function extractUpstreamPath(url) {
-  if (!url.pathname.startsWith(PROXY_PREFIX)) {
+  const rewrittenPath = (url.searchParams.get('path') || '').replace(/^\/+/, '');
+  if (rewrittenPath) {
+    return `/api/${rewrittenPath}`;
+  }
+
+  if (!url.pathname.startsWith('/api/cloud/')) {
     return '';
   }
 
-  const suffix = url.pathname.slice(PROXY_PREFIX.length);
+  const suffix = url.pathname.slice('/api/cloud'.length);
   return suffix ? `/api${suffix}` : '';
 }
 
@@ -199,7 +203,11 @@ export default async function handler(req) {
     return json({ error: 'Not found' }, 404, corsHeaders);
   }
 
-  const upstreamUrl = `${UPSTREAM_API_BASE}${upstreamPath}${requestUrl.search}`;
+  const upstreamUrl = new URL(`${UPSTREAM_API_BASE}${upstreamPath}`);
+  requestUrl.searchParams.forEach((value, key) => {
+    if (key === 'path') return;
+    upstreamUrl.searchParams.append(key, value);
+  });
   const upstreamResponse = await fetch(upstreamUrl, {
     method: req.method,
     headers: buildUpstreamHeaders(req),
