@@ -34,10 +34,15 @@ describe('prediction preview recovery guards', () => {
     assert.ok(appSrc.includes("const AI_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-ai-spotlight-restore-v1';"), 'Expected AI spotlight restore migration key');
     assert.ok(appSrc.includes("const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;"), 'Expected AI spotlight panel set');
     assert.ok(appSrc.includes("const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', ...AI_SPOTLIGHT_PANELS] as const;"), 'Expected SFC spotlight panel set');
+    assert.ok(appSrc.includes("const REGIONAL_NEWS_PANELS = ['politics', 'us', 'europe', 'middleeast', 'africa', 'latam', 'asia'] as const;"), 'Expected regional news panel set');
     assert.ok(appSrc.includes("const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;"), 'Expected ultrawide webcam-only bottom panel set');
-    assert.ok(appSrc.includes("const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS] as const;"), 'Expected free-tier priority ordering to preserve AI panels');
+    assert.ok(appSrc.includes("const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS, ...REGIONAL_NEWS_PANELS] as const;"), 'Expected free-tier priority ordering to preserve AI panels and regional news');
     assert.ok(appSrc.includes("promotePanelsAfterAnchor(order, 'live-news', restorablePanels)"), 'Expected AI panel order promotion near the top of the layout');
     assert.ok(appSrc.includes("const SFC_AGENT_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-sfc-agent-spotlight-v1';"), 'Expected new SFC spotlight migration key for existing saved layouts');
+    assert.ok(appSrc.includes("const REGIONAL_NEWS_RESTORE_KEY = 'worldmonitor-regional-news-restore-v1';"), 'Expected regional news restore migration key');
+    assert.ok(appSrc.includes("const anchor = order.includes('polymarket') ? 'polymarket' : 'live-news';"), 'Expected regional news restore to sit below the AI spotlight block');
     assert.ok(appSrc.includes("const ULTRAWIDE_WEBCAM_LAYOUT_KEY = 'worldmonitor-ultrawide-webcams-v1';"), 'Expected ultrawide webcam layout migration key');
+    assert.ok(appSrc.includes("const FULL_MARITIME_LAYER_DEFAULTS_KEY = 'worldmonitor-full-maritime-layers-v2';"), 'Expected full maritime layer migration key bump');
+    assert.match(appSrc, /const FULL_MARITIME_LAYER_DEFAULTS_KEY = 'worldmonitor-full-maritime-layers-v2';[\s\S]*?mapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected full maritime migration to force subsea cables on');
   });
 });

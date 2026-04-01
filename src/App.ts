@@ -77,8 +77,9 @@ import type { CorrelationPanel } from '@/components/CorrelationPanel';
 const CYBER_LAYER_ENABLED = import.meta.env.VITE_ENABLE_CYBER_LAYER === 'true';
 const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
 const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', ...AI_SPOTLIGHT_PANELS] as const;
+const REGIONAL_NEWS_PANELS = ['politics', 'us', 'europe', 'middleeast', 'africa', 'latam', 'asia'] as const;
 const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;
-const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS] as const;
+const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', ...SFC_AGENT_SPOTLIGHT_PANELS, ...REGIONAL_NEWS_PANELS] as const;
 
 function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
   const promoted = promotedPanels.filter((key) => order.includes(key));
@@ -638,6 +639,50 @@ export class App {
       localStorage.setItem(SFC_AGENT_SPOTLIGHT_RESTORE_KEY, 'done');
     }
 
+    const REGIONAL_NEWS_RESTORE_KEY = 'worldmonitor-regional-news-restore-v1';
+    if (!localStorage.getItem(REGIONAL_NEWS_RESTORE_KEY)) {
+      const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
+      const restorablePanels = REGIONAL_NEWS_PANELS.filter((key) => variantDefaults.has(key));
+      let changed = false;
+
+      for (const key of restorablePanels) {
+        if (!panelSettings[key]) {
+          panelSettings[key] = {
+            ...getEffectivePanelConfig(key, SITE_VARIANT),
+            enabled: true,
+          };
+          changed = true;
+          continue;
+        }
+
+        if (panelSettings[key]?.enabled) continue;
+        panelSettings[key] = {
+          ...panelSettings[key],
+          enabled: true,
+        };
+        changed = true;
+      }
+
+      if (changed) saveToStorage(STORAGE_KEYS.panels, panelSettings);
+
+      const savedOrder = localStorage.getItem(PANEL_ORDER_KEY);
+      if (savedOrder) {
+        try {
+          const order: string[] = JSON.parse(savedOrder);
+          const anchor = order.includes('polymarket') ? 'polymarket' : 'live-news';
+          const nextOrder = promotePanelsAfterAnchor(order, anchor, restorablePanels);
+          if (JSON.stringify(nextOrder) !== JSON.stringify(order)) {
+            localStorage.setItem(PANEL_ORDER_KEY, JSON.stringify(nextOrder));
+            console.log('[App] Restored regional news panels after the top spotlight block');
+          }
+        } catch {
+          // Invalid saved order, ignore and keep defaults.
+        }
+      }
+
+      localStorage.setItem(REGIONAL_NEWS_RESTORE_KEY, 'done');
+    }
+
     const ULTRAWIDE_WEBCAM_LAYOUT_KEY = 'worldmonitor-ultrawide-webcams-v1';
     if (!localStorage.getItem(ULTRAWIDE_WEBCAM_LAYOUT_KEY)) {
       const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
@@ -674,10 +719,11 @@ export class App {
       localStorage.setItem(FINANCE_PREMIUM_PANEL_MIGRATION_KEY, 'done');
     }
 
-    const FULL_MARITIME_LAYER_DEFAULTS_KEY = 'worldmonitor-full-maritime-layers-v1';
+    const FULL_MARITIME_LAYER_DEFAULTS_KEY = 'worldmonitor-full-maritime-layers-v2';
     if (currentVariant === 'full' && !localStorage.getItem(FULL_MARITIME_LAYER_DEFAULTS_KEY)) {
       mapLayers = {
         ...mapLayers,
+        cables: true,
         waterways: true,
         tradeRoutes: true,
       };

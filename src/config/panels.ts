@@ -102,7 +102,7 @@ const FULL_MAP_LAYERS: MapLayers = {
 
   conflicts: true,
   bases: !_desktop,
-  cables: false,
+  cables: true,
   pipelines: false,
   hotspots: true,
   ais: false,
@@ -164,7 +164,7 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
 
   conflicts: true,
   bases: false,
-  cables: false,
+  cables: true,
   pipelines: false,
   hotspots: true,
   ais: false,

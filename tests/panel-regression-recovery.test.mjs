@@ -47,4 +47,22 @@ describe('panel regression recovery', () => {
     assert.ok(zhLocaleSrc.includes('"polymarket": "SFC-Agent AI预测"'), 'Expected Chinese predictions title to include SFC-Agent prefix');
     assert.ok(zhLocaleSrc.includes('"forecast": "SFC-Agent AI预测研判"'), 'Expected Chinese forecast title to include SFC-Agent prefix');
   });
+
+  it('keeps regional news panels and subsea cables enabled in the full defaults', () => {
+    assert.ok(fullVariantSrc.includes("politics: { name: 'World News', enabled: true, priority: 1 }"), 'Expected world news panel in full defaults');
+    assert.ok(fullVariantSrc.includes("us: { name: 'United States', enabled: true, priority: 1 }"), 'Expected US panel in full defaults');
+    assert.ok(fullVariantSrc.includes("europe: { name: 'Europe', enabled: true, priority: 1 }"), 'Expected Europe panel in full defaults');
+    assert.ok(fullVariantSrc.includes("middleeast: { name: 'Middle East', enabled: true, priority: 1 }"), 'Expected Middle East panel in full defaults');
+    assert.ok(fullVariantSrc.includes("africa: { name: 'Africa', enabled: true, priority: 1 }"), 'Expected Africa panel in full defaults');
+    assert.ok(fullVariantSrc.includes("latam: { name: 'Latin America', enabled: true, priority: 1 }"), 'Expected Latin America panel in full defaults');
+    assert.ok(fullVariantSrc.includes("asia: { name: 'Asia-Pacific', enabled: true, priority: 1 }"), 'Expected Asia-Pacific panel in full defaults');
+    assert.ok(panelLayoutSrc.includes("this.createNewsPanel('politics', 'panels.politics');"), 'Expected world news panel wiring');
+    assert.ok(panelLayoutSrc.includes("this.createNewsPanel('middleeast', 'panels.middleeast');"), 'Expected Middle East panel wiring');
+    assert.ok(panelLayoutSrc.includes("this.createNewsPanel('latam', 'panels.latam');"), 'Expected Latin America panel wiring');
+    assert.ok(panelLayoutSrc.includes("this.createNewsPanel('asia', 'panels.asia');"), 'Expected Asia-Pacific panel wiring');
+    assert.match(panelsSrc, /const FULL_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected unified full desktop map defaults to enable subsea cables');
+    assert.match(panelsSrc, /const FULL_MOBILE_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected unified full mobile map defaults to enable subsea cables');
+    assert.match(fullVariantSrc, /export const DEFAULT_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected dedicated full desktop defaults to enable subsea cables');
+    assert.match(fullVariantSrc, /export const MOBILE_DEFAULT_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected dedicated full mobile defaults to enable subsea cables');
+  });
 });
