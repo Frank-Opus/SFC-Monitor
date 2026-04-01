@@ -7,7 +7,7 @@ let handler;
 
 describe('cloud preview proxy', () => {
   beforeEach(async () => {
-    const mod = await import(`../api/cloud/[[...path]].js?t=${Date.now()}`);
+    const mod = await import(`../api/cloud/[...path].js?t=${Date.now()}`);
     handler = mod.default;
   });
 

@@ -31,6 +31,6 @@ If preview regresses again, inspect first:
 
 - `src/services/runtime.ts`
 - `src/services/rpc-client.ts`
-- `api/cloud/[[...path]].js`
+- `api/cloud/[...path].js`
 - `src/services/prediction/index.ts`
 - `src/App.ts`
