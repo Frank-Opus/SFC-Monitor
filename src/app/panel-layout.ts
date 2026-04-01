@@ -98,6 +98,7 @@ import type { Panel } from '@/components/Panel';
 
 /** Panels that require premium access on web. Auth-based gating applies to these. */
 const SFC_AGENT_SPOTLIGHT_PANELS = ['live-webcams', 'insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
+const REGIONAL_NEWS_PANELS = ['politics', 'us', 'europe', 'middleeast', 'africa', 'latam', 'asia'] as const;
 const ULTRAWIDE_WEBCAM_BOTTOM_PANELS = ['live-webcams'] as const;
 
 function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
@@ -1100,6 +1101,7 @@ export class PanelLayoutManager implements AppModule {
         }
 
         allOrder = promotePanelsAfterAnchor(allOrder, 'live-news', SFC_AGENT_SPOTLIGHT_PANELS);
+        allOrder = promotePanelsAfterAnchor(allOrder, 'polymarket', REGIONAL_NEWS_PANELS);
       }
 
       if (this.ctx.isDesktopApp) {

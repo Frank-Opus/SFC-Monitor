@@ -60,6 +60,8 @@ describe('panel regression recovery', () => {
     assert.ok(panelLayoutSrc.includes("this.createNewsPanel('middleeast', 'panels.middleeast');"), 'Expected Middle East panel wiring');
     assert.ok(panelLayoutSrc.includes("this.createNewsPanel('latam', 'panels.latam');"), 'Expected Latin America panel wiring');
     assert.ok(panelLayoutSrc.includes("this.createNewsPanel('asia', 'panels.asia');"), 'Expected Asia-Pacific panel wiring');
+    assert.ok(panelLayoutSrc.includes("const REGIONAL_NEWS_PANELS = ['politics', 'us', 'europe', 'middleeast', 'africa', 'latam', 'asia'] as const;"), 'Expected regional news promotion set in layout manager');
+    assert.ok(panelLayoutSrc.includes("allOrder = promotePanelsAfterAnchor(allOrder, 'polymarket', REGIONAL_NEWS_PANELS);"), 'Expected fresh layouts to place regional news below the AI spotlight block');
     assert.match(panelsSrc, /const FULL_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected unified full desktop map defaults to enable subsea cables');
     assert.match(panelsSrc, /const FULL_MOBILE_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected unified full mobile map defaults to enable subsea cables');
     assert.match(fullVariantSrc, /export const DEFAULT_MAP_LAYERS: MapLayers = \{[\s\S]*?\bcables: true,/u, 'Expected dedicated full desktop defaults to enable subsea cables');
