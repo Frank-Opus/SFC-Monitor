@@ -57,6 +57,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   layoffs: { name: 'Layoffs Tracker', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
   'satellite-fires': { name: 'Fires', enabled: true, priority: 2 },
+  'satellite-imagery': { name: 'Satellite Imagery', enabled: true, priority: 2 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 2 },
   'fear-greed': { name: 'Fear & Greed', enabled: true, priority: 2 },
   'macro-tiles': { name: 'Macro Indicators', enabled: false, priority: 2 },
@@ -1013,7 +1014,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   dataTracking: {
     labelKey: 'header.panelCatDataTracking',
-    panelKeys: ['monitors', 'satellite-fires', 'ucdp-events', 'displacement', 'climate', 'population-exposure', 'security-advisories', 'radiation-watch', 'oref-sirens', 'world-clock', 'tech-readiness'],
+    panelKeys: ['monitors', 'satellite-fires', 'satellite-imagery', 'ucdp-events', 'displacement', 'climate', 'population-exposure', 'security-advisories', 'radiation-watch', 'oref-sirens', 'world-clock', 'tech-readiness'],
   },
 
   // Tech variant
@@ -1037,7 +1038,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   // Finance variant
   finMarkets: {
     labelKey: 'header.panelCatMarkets',
-    panelKeys: ['markets', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket'],
+    panelKeys: ['markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'market-implications', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket'],
   },
   fixedIncomeFx: {
     labelKey: 'header.panelCatFixedIncomeFx',

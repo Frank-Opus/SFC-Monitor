@@ -37,6 +37,7 @@ import {
   InternetDisruptionsPanel,
   RuntimeConfigPanel,
   InsightsPanel,
+  SatelliteImageryPanel,
   MacroSignalsPanel,
   FearGreedPanel,
   ETFFlowsPanel,
@@ -674,6 +675,20 @@ export class PanelLayoutManager implements AppModule {
     }
 
     this.createPanel('gdelt-intel', () => new GdeltIntelPanel());
+    const satelliteImageryPanel = this.createPanel('satellite-imagery', () => new SatelliteImageryPanel());
+    satelliteImageryPanel?.setOnSearchArea(() => {
+      void import('@/services/imagery').then(async ({ fetchImageryScenes }) => {
+        const bbox = this.ctx.map?.getBbox();
+        if (!bbox) return;
+        try {
+          const scenes = await fetchImageryScenes({ bbox, limit: 20 });
+          satelliteImageryPanel.update(scenes);
+          this.ctx.map?.setImageryScenes(scenes);
+        } catch {
+          satelliteImageryPanel.showError('Failed to search imagery for the current viewport.');
+        }
+      });
+    });
 
     if (SITE_VARIANT === 'full' && this.ctx.isDesktopApp) {
       import('@/components/DeductionPanel').then(({ DeductionPanel }) => {

@@ -138,6 +138,7 @@ export const COMMANDS: Command[] = [
   { id: 'panel:economic-correlation', keywords: ['economic warfare', 'economic correlation', 'sanctions impact'], label: 'Economic Warfare', icon: '\u{1F4B1}', category: 'panels' },
   { id: 'panel:disaster-correlation', keywords: ['disaster cascade', 'disaster correlation', 'natural disaster'], label: 'Panel: Disaster Cascade', icon: '\u{1F30A}', category: 'panels' },
   { id: 'panel:satellite-fires', keywords: ['fires', 'satellite fires', 'wildfires', 'fire detections'], label: 'Panel: Fires', icon: '\u{1F525}', category: 'panels' },
+  { id: 'panel:satellite-imagery', keywords: ['satellite imagery', 'imagery', 'satellite photos', 'sar', 'optical imagery'], label: 'Panel: Satellite Imagery', icon: '\u{1F6F0}\uFE0F', category: 'panels' },
   { id: 'panel:gulf-economies', keywords: ['gulf', 'gulf economies', 'gcc', 'saudi', 'uae'], label: 'Panel: Gulf Economies', icon: '\u{1F3D7}\uFE0F', category: 'panels' },
   { id: 'panel:gcc-investments', keywords: ['gcc investments', 'gcc funds', 'gulf investments', 'sovereign wealth'], label: 'Panel: GCC Investments', icon: '\u{1F4B0}', category: 'panels' },
   { id: 'panel:giving', keywords: ['giving', 'philanthropy', 'awards', 'donations'], label: 'Panel: Global Giving', icon: '\u{1F49D}', category: 'panels' },

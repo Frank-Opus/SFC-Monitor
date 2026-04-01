@@ -682,6 +682,8 @@ export class DataLoaderManager implements AppModule {
         if (!this.ctx.mapLayers.satellites) return;
         if (this.ctx.map?.isGlobeMode()) return;
         this.ctx.map?.setImageryScenes(scenes);
+        const panel = this.ctx.panels['satellite-imagery'] as import('@/components').SatelliteImageryPanel | undefined;
+        panel?.update(scenes);
       } catch { /* imagery is best-effort */ }
     });
   }
