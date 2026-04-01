@@ -29,4 +29,11 @@ describe('prediction preview recovery guards', () => {
     assert.ok(appSrc.includes("const LIVE_WEBCAMS_RESTORE_KEY = 'worldmonitor-live-webcams-restore-v1';"), 'Expected webcam restore migration key');
     assert.ok(appSrc.includes("variantDefaults.has('live-webcams')"), 'Expected webcam restore migration to check variant defaults');
   });
+
+  it('restores AI spotlight panels and protects them from free-tier trimming', () => {
+    assert.ok(appSrc.includes("const AI_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-ai-spotlight-restore-v1';"), 'Expected AI spotlight restore migration key');
+    assert.ok(appSrc.includes("const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;"), 'Expected AI spotlight panel set');
+    assert.ok(appSrc.includes("const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', 'live-webcams', ...AI_SPOTLIGHT_PANELS] as const;"), 'Expected free-tier priority ordering to preserve AI panels');
+    assert.ok(appSrc.includes("promotePanelsAfterAnchor(order, 'live-news', restorablePanels)"), 'Expected AI panel order promotion near the top of the layout');
+  });
 });

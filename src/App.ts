@@ -75,6 +75,32 @@ import {
 import type { CorrelationPanel } from '@/components/CorrelationPanel';
 
 const CYBER_LAYER_ENABLED = import.meta.env.VITE_ENABLE_CYBER_LAYER === 'true';
+const AI_SPOTLIGHT_PANELS = ['insights', 'strategic-posture', 'forecast', 'polymarket'] as const;
+const FREE_TIER_PRIORITY_PANEL_ORDER = ['map', 'live-news', 'live-webcams', ...AI_SPOTLIGHT_PANELS] as const;
+
+function promotePanelsAfterAnchor(order: string[], anchor: string, promotedPanels: readonly string[]): string[] {
+  const promoted = promotedPanels.filter((key) => order.includes(key));
+  if (promoted.length === 0) return order;
+
+  const promotedSet = new Set(promoted);
+  const filtered = order.filter((key) => !promotedSet.has(key));
+  const anchorIndex = filtered.indexOf(anchor);
+
+  if (anchorIndex === -1) {
+    return [...promoted, ...filtered];
+  }
+
+  return [
+    ...filtered.slice(0, anchorIndex + 1),
+    ...promoted,
+    ...filtered.slice(anchorIndex + 1),
+  ];
+}
+
+function getFreeTierPanelRank(key: string): number {
+  const rank = FREE_TIER_PRIORITY_PANEL_ORDER.indexOf(key as typeof FREE_TIER_PRIORITY_PANEL_ORDER[number]);
+  return rank === -1 ? Number.MAX_SAFE_INTEGER : rank;
+}
 
 export type { CountryBriefSignals } from '@/app/app-context';
 
@@ -531,6 +557,40 @@ export class App {
         saveToStorage(STORAGE_KEYS.panels, panelSettings);
       }
       localStorage.setItem(LIVE_WEBCAMS_RESTORE_KEY, 'done');
+    }
+
+    const AI_SPOTLIGHT_RESTORE_KEY = 'worldmonitor-ai-spotlight-restore-v1';
+    if (!localStorage.getItem(AI_SPOTLIGHT_RESTORE_KEY)) {
+      const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
+      let changed = false;
+      const restorablePanels = AI_SPOTLIGHT_PANELS.filter((key) => variantDefaults.has(key));
+
+      for (const key of restorablePanels) {
+        if (!panelSettings[key] || panelSettings[key]?.enabled) continue;
+        panelSettings[key] = {
+          ...panelSettings[key],
+          enabled: true,
+        };
+        changed = true;
+      }
+
+      if (changed) saveToStorage(STORAGE_KEYS.panels, panelSettings);
+
+      const savedOrder = localStorage.getItem(PANEL_ORDER_KEY);
+      if (savedOrder) {
+        try {
+          const order: string[] = JSON.parse(savedOrder);
+          const nextOrder = promotePanelsAfterAnchor(order, 'live-news', restorablePanels);
+          if (JSON.stringify(nextOrder) !== JSON.stringify(order)) {
+            localStorage.setItem(PANEL_ORDER_KEY, JSON.stringify(nextOrder));
+            console.log('[App] Restored AI spotlight panels near the top of the layout');
+          }
+        } catch {
+          // Invalid saved order, ignore and keep defaults.
+        }
+      }
+
+      localStorage.setItem(AI_SPOTLIGHT_RESTORE_KEY, 'done');
     }
 
     // One-time mobile finance migration: enable key maritime/economic layers after the mobile defaults changed.
@@ -999,7 +1059,11 @@ export class App {
     }
     const enabledKeys = Object.entries(panelSettings)
       .filter(([k, v]) => v.enabled && !k.startsWith('cw-'))
-      .sort(([ka, a], [kb, b]) => (a.priority ?? 99) - (b.priority ?? 99) || ka.localeCompare(kb))
+      .sort(([ka, a], [kb, b]) => {
+        const rankDiff = getFreeTierPanelRank(ka) - getFreeTierPanelRank(kb);
+        if (rankDiff !== 0) return rankDiff;
+        return (a.priority ?? 99) - (b.priority ?? 99) || ka.localeCompare(kb);
+      })
       .map(([k]) => k);
     const needsTrim = enabledKeys.length > FREE_MAX_PANELS;
     if (needsTrim) {

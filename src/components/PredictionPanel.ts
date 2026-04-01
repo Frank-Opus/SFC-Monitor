@@ -8,6 +8,7 @@ export class PredictionPanel extends Panel {
     super({
       id: 'polymarket',
       title: t('panels.polymarket'),
+      className: 'panel-ai-linked',
       infoTooltip: t('components.prediction.infoTooltip'),
     });
   }

@@ -50,6 +50,7 @@ export class MarketImplicationsPanel extends Panel {
     super({
       id: 'market-implications',
       title: 'AI Market Implications',
+      className: 'panel-ai-linked',
       infoTooltip: t('components.marketImplications.infoTooltip'),
       premium: 'locked',
     });

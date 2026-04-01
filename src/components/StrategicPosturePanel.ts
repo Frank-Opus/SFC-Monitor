@@ -21,6 +21,7 @@ export class StrategicPosturePanel extends Panel {
     super({
       id: 'strategic-posture',
       title: t('panels.strategicPosture'),
+      className: 'panel-ai-focus',
       showCount: false,
       trackActivity: true,
       infoTooltip: t('components.strategicPosture.infoTooltip'),

@@ -258,6 +258,16 @@ export class Panel {
       headerLeft.appendChild(proBadge);
     }
 
+    if (options.className?.includes('panel-ai-focus') || options.className?.includes('panel-ai-linked')) {
+      const isPrimaryAi = options.className.includes('panel-ai-focus');
+      const aiBadge = h(
+        'span',
+        { className: `panel-ai-badge${isPrimaryAi ? '' : ' panel-ai-badge-linked'}` },
+        isPrimaryAi ? 'AI' : 'AI+',
+      );
+      headerLeft.appendChild(aiBadge);
+    }
+
     this.header.appendChild(headerLeft);
 
     this.statusBadgeEl = document.createElement('span');
