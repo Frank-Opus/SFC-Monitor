@@ -25,10 +25,13 @@ describe('runtime env guards', () => {
   });
 
   it('treats the deployed sfc-monitor Vercel host as a trusted web host', () => {
-    assert.match(
-      runtimeSrc,
-      /\|\| \/\^sfc-monitor\(\?:-\[a-z0-9-\]\+\)\*\\\.vercel\\\.app\$\/i\.test\(hostname\);/,
-    );
+    assert.ok(runtimeSrc.includes('const SFC_MONITOR_HOST_PATTERN = /^sfc-monitor(?:-[a-z0-9-]+)*\\.vercel\\.app$/i;'), 'Expected shared sfc-monitor host pattern');
+    assert.ok(runtimeSrc.includes('|| SFC_MONITOR_HOST_PATTERN.test(hostname);'), 'Expected trusted web host check to reuse shared sfc-monitor pattern');
+  });
+
+  it('keeps sfc-monitor market requests on same-origin so preview can proxy them server-side', () => {
+    assert.ok(runtimeSrc.includes("const SAME_ORIGIN_MARKET_PROXY_PATTERN = /^\\/api\\/market\\/v1\\//;"), 'Expected same-origin market proxy pattern');
+    assert.ok(runtimeSrc.includes('function shouldUseSameOriginMarketProxy(pathWithQuery: string): boolean {'), 'Expected same-origin market proxy helper');
   });
 });
 

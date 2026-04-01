@@ -12,6 +12,8 @@ const ENV = (() => {
 const WS_API_URL = ENV.VITE_WS_API_URL || '';
 const DEFAULT_WEB_API_URL = 'https://api.worldmonitor.app';
 const KEYED_CLOUD_API_PATTERN = /^\/api\/(?:[^/]+\/v1\/|bootstrap(?:\?|$)|polymarket(?:\?|$)|ais-snapshot(?:\?|$))/;
+const SFC_MONITOR_HOST_PATTERN = /^sfc-monitor(?:-[a-z0-9-]+)*\.vercel\.app$/i;
+const SAME_ORIGIN_MARKET_PROXY_PATTERN = /^\/api\/market\/v1\//;
 
 const DEFAULT_REMOTE_HOSTS: Record<string, string> = {
   tech: WS_API_URL,
@@ -124,7 +126,16 @@ function isWorldMonitorWebHost(hostname: string): boolean {
   return hostname === 'worldmonitor.app'
     || hostname === 'www.worldmonitor.app'
     || hostname.endsWith('.worldmonitor.app')
-    || /^sfc-monitor(?:-[a-z0-9-]+)*\.vercel\.app$/i.test(hostname);
+    || SFC_MONITOR_HOST_PATTERN.test(hostname);
+}
+
+function shouldUseSameOriginMarketProxy(pathWithQuery: string): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return SFC_MONITOR_HOST_PATTERN.test(window.location?.hostname ?? '')
+    && SAME_ORIGIN_MARKET_PROXY_PATTERN.test(pathWithQuery);
 }
 
 export function getConfiguredWebApiBaseUrl(): string {
@@ -829,8 +840,11 @@ export function installWebApiRedirect(): void {
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       if (typeof input === 'string') {
         if (shouldRedirectPath(input)) {
-          // Relative /api/... path — redirect to API base and inject auth.
           const enriched = await enrichInitForPremium(input, init);
+          if (shouldUseSameOriginMarketProxy(input)) {
+            return nativeFetch(input, enriched ?? init);
+          }
+          // Relative /api/... path — redirect to API base and inject auth.
           return fetchWithRedirectFallback(`${API_BASE}${input}`, input, enriched);
         }
         // Absolute URL already targeting the API base (generated clients call fetch
@@ -838,6 +852,9 @@ export function installWebApiRedirect(): void {
         if (input.startsWith(`${API_BASE}/api/`)) {
           const pathAndSearch = input.slice(API_BASE.length);
           const enriched = await enrichInitForPremium(pathAndSearch, init);
+          if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
+            return fetchWithRedirectFallback(pathAndSearch, input, enriched);
+          }
           return nativeFetch(input, enriched ?? init);
         }
       }
@@ -845,11 +862,17 @@ export function installWebApiRedirect(): void {
         const pathAndSearch = `${input.pathname}${input.search}`;
         if (input.origin === window.location.origin && shouldRedirectPath(pathAndSearch)) {
           const enriched = await enrichInitForPremium(pathAndSearch, init);
+          if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
+            return nativeFetch(input, enriched ?? init);
+          }
           return fetchWithRedirectFallback(new URL(`${API_BASE}${pathAndSearch}`), input, enriched);
         }
         // URL object already targeting the API base.
         if (input.origin === API_BASE && pathAndSearch.startsWith('/api/')) {
           const enriched = await enrichInitForPremium(pathAndSearch, init);
+          if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
+            return fetchWithRedirectFallback(new URL(pathAndSearch, window.location.origin), input, enriched);
+          }
           return nativeFetch(input, enriched ?? init);
         }
       }
@@ -858,6 +881,10 @@ export function installWebApiRedirect(): void {
         const pathAndSearch = `${u.pathname}${u.search}`;
         if (u.origin === window.location.origin && shouldRedirectPath(pathAndSearch)) {
           const enriched = await enrichInitForPremium(pathAndSearch, init);
+          if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
+            if (enriched) return nativeFetch(new Request(input, enriched));
+            return nativeFetch(input, init);
+          }
           return fetchWithRedirectFallback(
             new Request(`${API_BASE}${pathAndSearch}`, input),
             input.clone(),
@@ -867,6 +894,10 @@ export function installWebApiRedirect(): void {
         // Request object already targeting the API base.
         if (u.origin === API_BASE && pathAndSearch.startsWith('/api/')) {
           const enriched = await enrichInitForPremium(pathAndSearch, init);
+          if (shouldUseSameOriginMarketProxy(pathAndSearch)) {
+            const sameOriginRequest = new Request(new URL(pathAndSearch, window.location.origin), input);
+            return fetchWithRedirectFallback(sameOriginRequest, input.clone(), enriched);
+          }
           if (enriched) return nativeFetch(new Request(input, enriched));
         }
       }
